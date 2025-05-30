@@ -88,36 +88,54 @@ export default async function handler(
       brandColor: formData.brandColor
     };
 
-    // TODO: Integrate with Airtable
-    // Example Airtable integration (uncomment and configure when ready):
-    /*
-    const airtableResponse = await fetch(`https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fields: {
-          'Business Name': formData.businessName,
-          'Website URL': formData.websiteUrl,
-          'Email': formData.email,
-          'Phone Number': formData.phoneNumber,
-          'Business Hours': formData.businessHours,
-          'FAQ 1': formData.faq1,
-          'FAQ 2': formData.faq2,
-          'FAQ 3': formData.faq3,
-          'Brand Color': formData.brandColor,
-          'Status': 'New',
-          'Created': new Date().toISOString(),
-        },
-      }),
-    });
+    // Generate submission ID
+    const submissionId = `CB-${Date.now()}`;
+    const estimatedDelivery = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-    if (!airtableResponse.ok) {
-      throw new Error('Failed to save to Airtable');
+    // Integrate with Airtable
+    if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
+      try {
+        const airtableResponse = await fetch(`https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fields: {
+              'Business Name': formData.businessName,
+              'Website URL': formData.websiteUrl,
+              'Email': formData.email,
+              'Phone Number': formData.phoneNumber,
+              'Business Hours': formData.businessHours,
+              'FAQ 1': formData.faq1,
+              'FAQ 2': formData.faq2,
+              'FAQ 3': formData.faq3,
+              'Brand Color': formData.brandColor,
+              'Status': 'New',
+              'Created': new Date().toISOString(),
+              'Submission ID': submissionId,
+              'Estimated Delivery': estimatedDelivery,
+            },
+          }),
+        });
+
+        if (!airtableResponse.ok) {
+          const errorText = await airtableResponse.text();
+          console.error('❌ Airtable API Error:', errorText);
+          throw new Error(`Failed to save to Airtable: ${airtableResponse.status}`);
+        }
+
+        const airtableData = await airtableResponse.json();
+        console.log('✅ Successfully saved to Airtable:', airtableData.id);
+      } catch (airtableError) {
+        console.error('❌ Airtable integration error:', airtableError);
+        // Don't fail the entire request if Airtable fails
+        // You might want to save to a backup system or queue for retry
+      }
+    } else {
+      console.log('⚠️ Airtable credentials not configured, skipping integration');
     }
-    */
 
     // TODO: Send notification email using EmailJS or similar service
     // Example EmailJS integration (configure when ready):
@@ -144,15 +162,15 @@ export default async function handler(
       success: true,
       message: 'Form submitted successfully! We\'ll be in touch within 24 hours.',
       data: {
-        submissionId: `CB-${Date.now()}`,
+        submissionId,
         businessName: formData.businessName,
-        estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        estimatedDelivery
       }
     });
 
   } catch (error) {
     console.error('❌ Form submission error:', error);
-    
+
     return res.status(500).json({
       success: false,
       message: 'Internal server error. Please try again later.'
