@@ -4,7 +4,7 @@ import Form from '@/components/Form';
 
 const HomePage: React.FC = () => {
   return (
-    <Layout 
+    <Layout
       title="Get a 24/7 AI Assistant That Converts Visitors into Paying Clients"
       description="Launch your AI chatbot in under 24 hours. Fully automated. No coding required. Converts leads 24/7, books appointments automatically, and captures every customer inquiry."
     >
@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
           {/* CTA Button */}
           <div className="mb-16 animate-bounce-slow">
             <a
-              href="https://square.link/u/YOUR-LINK"
+              href="https://square.link/u/YOUR-ACTUAL-LINK"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block btn-primary text-xl px-12 py-4"
@@ -166,7 +166,7 @@ const HomePage: React.FC = () => {
                 </li>
               </ul>
               <a
-                href="https://square.link/u/YOUR-LINK"
+                href="https://square.link/u/YOUR-ACTUAL-LINK"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary w-full"
@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
               Fill out the form below and we'll have your AI chatbot ready in 24 hours!
             </p>
           </div>
-          
+
           <Form />
         </div>
       </section>
