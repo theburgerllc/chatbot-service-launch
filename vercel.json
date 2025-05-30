@@ -1,4 +1,6 @@
 {
+  "name": "chatbot-service-launch",
+  "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
@@ -36,5 +38,8 @@
       "destination": "/",
       "permanent": true
     }
-  ]
+  ],
+  "env": {
+    "AIRTABLE_TABLE_NAME": "Chatbot_Requests"
+  }
 }
