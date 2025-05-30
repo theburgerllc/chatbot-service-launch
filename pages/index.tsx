@@ -137,7 +137,7 @@ const HomePage: React.FC = () => {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
               <div className="text-4xl font-bold text-gray-900 mb-4">
-                $97<span className="text-lg text-gray-600">/month</span>
+                $297<span className="text-lg text-gray-600">/month</span>
               </div>
               <ul className="text-left space-y-3 mb-8">
                 <li className="flex items-center">
