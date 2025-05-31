@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
           {/* CTA Button */}
           <div className="mb-16 animate-bounce-slow">
             <a
-              href="https://square.link/u/YOUR-ACTUAL-LINK"
+              href="https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block btn-primary text-xl px-12 py-4"
@@ -166,7 +166,7 @@ const HomePage: React.FC = () => {
                 </li>
               </ul>
               <a
-                href="https://square.link/u/YOUR-ACTUAL-LINK"
+                href="https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary w-full"

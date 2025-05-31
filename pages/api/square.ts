@@ -14,20 +14,25 @@ export default async function handler(
   }
 
   try {
-    // TODO: Verify Square webhook signature
-    // const signature = req.headers['x-square-signature'] as string;
-    // const body = JSON.stringify(req.body);
-    // const isValidSignature = verifySquareSignature(signature, body, process.env.SQUARE_WEBHOOK_SECRET);
-    
-    // if (!isValidSignature) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: 'Invalid webhook signature'
-    //   });
-    // }
+    // Verify Square webhook signature (uncomment when webhook is configured)
+    if (process.env.SQUARE_WEBHOOK_SECRET) {
+      const signature = req.headers['x-square-signature'] as string;
+      const body = JSON.stringify(req.body);
+      const isValidSignature = verifySquareSignature(signature, body, process.env.SQUARE_WEBHOOK_SECRET);
+
+      if (!isValidSignature) {
+        console.error('❌ Invalid webhook signature');
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid webhook signature'
+        });
+      }
+    } else {
+      console.log('⚠️ Webhook signature verification disabled (no secret configured)');
+    }
 
     const webhookData = req.body;
-    
+
     // Log the webhook event
     console.log('🔔 Square Webhook Received:');
     console.log('Event Type:', webhookData.type);
@@ -40,23 +45,23 @@ export default async function handler(
       case 'payment.created':
         await handlePaymentCreated(webhookData.data);
         break;
-      
+
       case 'payment.updated':
         await handlePaymentUpdated(webhookData.data);
         break;
-      
+
       case 'subscription.created':
         await handleSubscriptionCreated(webhookData.data);
         break;
-      
+
       case 'subscription.updated':
         await handleSubscriptionUpdated(webhookData.data);
         break;
-      
+
       case 'subscription.canceled':
         await handleSubscriptionCanceled(webhookData.data);
         break;
-      
+
       default:
         console.log(`⚠️ Unhandled webhook event type: ${webhookData.type}`);
     }
@@ -69,7 +74,7 @@ export default async function handler(
 
   } catch (error) {
     console.error('❌ Square webhook error:', error);
-    
+
     return res.status(500).json({
       success: false,
       message: 'Internal server error processing webhook'
@@ -80,36 +85,58 @@ export default async function handler(
 // Helper functions for handling different webhook events
 
 async function handlePaymentCreated(paymentData: any) {
-  console.log('💰 Payment Created:', paymentData.object.payment.id);
-  
-  // TODO: Process new payment
-  // - Update customer status
-  // - Send confirmation email
-  // - Trigger chatbot creation process
-  // - Update Airtable/database records
+  const payment = paymentData.object.payment;
+  console.log('💰 Payment Created:', payment.id);
+  console.log('💰 Amount:', payment.amount_money);
+  console.log('💰 Status:', payment.status);
+
+  // Update Airtable record if payment is successful
+  if (payment.status === 'COMPLETED' && process.env.AIRTABLE_API_KEY) {
+    try {
+      // Find customer record by email or create new one
+      // This would require additional customer data from Square
+      console.log('📝 Updating customer status in Airtable...');
+
+      // TODO: Implement Airtable update logic
+      // - Find customer record by payment reference
+      // - Update status to "Payment Received"
+      // - Trigger chatbot creation workflow
+
+    } catch (error) {
+      console.error('❌ Failed to update Airtable:', error);
+    }
+  }
 }
 
 async function handlePaymentUpdated(paymentData: any) {
   console.log('💰 Payment Updated:', paymentData.object.payment.id);
-  
+
   // TODO: Process payment update
   // - Handle payment status changes
   // - Update customer records
 }
 
 async function handleSubscriptionCreated(subscriptionData: any) {
-  console.log('📅 Subscription Created:', subscriptionData.object.subscription.id);
-  
-  // TODO: Process new subscription
-  // - Activate customer account
-  // - Send welcome email
-  // - Start chatbot creation process
-  // - Set up recurring billing notifications
+  const subscription = subscriptionData.object.subscription;
+  console.log('📅 Subscription Created:', subscription.id);
+  console.log('📅 Plan:', subscription.plan_id);
+  console.log('📅 Status:', subscription.status);
+
+  // Process new subscription
+  if (subscription.status === 'ACTIVE') {
+    console.log('🎉 New active subscription! Starting chatbot creation process...');
+
+    // TODO: Implement subscription activation logic
+    // - Update Airtable record status to "Subscription Active"
+    // - Send welcome email
+    // - Trigger chatbot creation workflow
+    // - Set up customer onboarding sequence
+  }
 }
 
 async function handleSubscriptionUpdated(subscriptionData: any) {
   console.log('📅 Subscription Updated:', subscriptionData.object.subscription.id);
-  
+
   // TODO: Process subscription update
   // - Handle plan changes
   // - Update billing information
@@ -118,7 +145,7 @@ async function handleSubscriptionUpdated(subscriptionData: any) {
 
 async function handleSubscriptionCanceled(subscriptionData: any) {
   console.log('📅 Subscription Canceled:', subscriptionData.object.subscription.id);
-  
+
   // TODO: Process subscription cancellation
   // - Deactivate customer account
   // - Send cancellation confirmation
@@ -126,13 +153,13 @@ async function handleSubscriptionCanceled(subscriptionData: any) {
   // - Update customer status
 }
 
-// TODO: Implement Square signature verification
-// function verifySquareSignature(signature: string, body: string, secret: string): boolean {
-//   const crypto = require('crypto');
-//   const expectedSignature = crypto
-//     .createHmac('sha256', secret)
-//     .update(body)
-//     .digest('base64');
-//   
-//   return signature === expectedSignature;
-// }
+// Square signature verification function
+function verifySquareSignature(signature: string, body: string, secret: string): boolean {
+  const crypto = require('crypto');
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('base64');
+
+  return signature === expectedSignature;
+}
