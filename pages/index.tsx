@@ -2,6 +2,17 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import Form from '@/components/Form';
 
+// Square checkout URLs - automatically switches based on environment
+const SQUARE_CHECKOUT_URLS = {
+  production: "https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV",
+  sandbox: "https://square.link/u/SANDBOX-PLACEHOLDER" // You'll need to replace this with actual sandbox URL
+};
+
+const getCheckoutUrl = () => {
+  const isProduction = process.env.NODE_ENV === 'production' && process.env.SQUARE_ENVIRONMENT === 'production';
+  return isProduction ? SQUARE_CHECKOUT_URLS.production : SQUARE_CHECKOUT_URLS.sandbox;
+};
+
 const HomePage: React.FC = () => {
   return (
     <Layout
@@ -40,7 +51,7 @@ const HomePage: React.FC = () => {
           {/* CTA Button */}
           <div className="mb-16 animate-bounce-slow">
             <a
-              href="https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV"
+              href={getCheckoutUrl()}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block btn-primary text-xl px-12 py-4"
@@ -166,7 +177,7 @@ const HomePage: React.FC = () => {
                 </li>
               </ul>
               <a
-                href="https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV"
+                href={getCheckoutUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary w-full"

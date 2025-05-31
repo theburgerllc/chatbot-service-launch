@@ -34,7 +34,9 @@ export default async function handler(
     const webhookData = req.body;
 
     // Log the webhook event
+    const environment = process.env.SQUARE_ENVIRONMENT || 'unknown';
     console.log('🔔 Square Webhook Received:');
+    console.log('Environment:', environment.toUpperCase());
     console.log('Event Type:', webhookData.type);
     console.log('Event ID:', webhookData.event_id);
     console.log('Timestamp:', new Date().toISOString());
