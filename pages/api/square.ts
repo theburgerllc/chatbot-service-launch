@@ -15,9 +15,8 @@ export default async function handler(
 
   try {
     // Get webhook secret based on environment
-    const webhookSecret = process.env.SQUARE_ENVIRONMENT === 'sandbox'
-      ? process.env.SQUARE_WEBHOOK_SECRET_SANDBOX
-      : process.env.SQUARE_WEBHOOK_SECRET;
+    // Temporary: Use sandbox secret if available, fallback to production
+    const webhookSecret = process.env.SQUARE_WEBHOOK_SECRET_SANDBOX || process.env.SQUARE_WEBHOOK_SECRET;
 
     // Verify Square webhook signature
     if (webhookSecret) {
