@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '@/components/Layout';
-import Form from '@/components/Form';
+import LeadCaptureForm from '@/components/LeadCaptureForm';
 
 // Square checkout URLs - automatically switches based on environment
 const SQUARE_CHECKOUT_URLS = {
@@ -189,19 +189,75 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Form Section */}
+      {/* Lead Capture Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Interested? Let's Talk!
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Get a personalized quote and see how our AI chatbot can transform your business.
+            </p>
+          </div>
+
+          <LeadCaptureForm />
+        </div>
+      </section>
+
+      {/* CTA Section */}
       <section id="contact" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Ready to Get Started?
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Fill out the form below and we'll have your AI chatbot ready in 24 hours!
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+              Start your subscription and configure your AI chatbot in minutes!
             </p>
           </div>
 
-          <Form />
+          <div className="max-w-lg mx-auto text-center">
+            <div className="card border-2 border-primary-500">
+              <div className="text-primary-600 font-semibold text-sm uppercase tracking-wide mb-4">
+                🚀 Get Started Now
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Launch Your AI Chatbot
+              </h3>
+              <div className="text-4xl font-bold text-gray-900 mb-6">
+                $297<span className="text-lg text-gray-600">/month</span>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-center text-gray-600">
+                  <span className="text-green-500 mr-3">✓</span>
+                  <span>Start subscription instantly</span>
+                </div>
+                <div className="flex items-center justify-center text-gray-600">
+                  <span className="text-green-500 mr-3">✓</span>
+                  <span>Configure your chatbot after payment</span>
+                </div>
+                <div className="flex items-center justify-center text-gray-600">
+                  <span className="text-green-500 mr-3">✓</span>
+                  <span>Live in 24 hours</span>
+                </div>
+              </div>
+
+              <a
+                href={getCheckoutUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full btn-primary text-xl py-4 inline-block"
+              >
+                🚀 Start Your Subscription Now
+              </a>
+
+              <p className="text-sm text-gray-500 mt-4">
+                Secure payment via Square • Cancel anytime • 30-day money-back guarantee
+              </p>
+            </div>
+          </div>
         </div>
       </section>
     </Layout>

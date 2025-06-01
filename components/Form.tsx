@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useRouter } from 'next/router';
 import axios from 'axios';
 import { OnboardingFormData } from '@/types';
 
 const Form: React.FC = () => {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  
+
   const {
     register,
     handleSubmit,
@@ -17,16 +19,24 @@ const Form: React.FC = () => {
   const onSubmit = async (data: OnboardingFormData) => {
     setIsSubmitting(true);
     setSubmitMessage('');
-    
+
     try {
       const response = await axios.post('/api/submit', data);
-      
+
       if (response.data.success) {
         setSubmitMessage('🎉 Success! We\'ll be in touch within 24 hours.');
         reset();
-        // Redirect to success page after a short delay
+
+        // Check if we're on the configure page (post-payment) or regular homepage
+        const isConfigurePage = router.pathname === '/configure';
+
+        // Redirect to appropriate success page after a short delay
         setTimeout(() => {
-          window.location.href = '/success';
+          if (isConfigurePage) {
+            window.location.href = '/success?configured=true';
+          } else {
+            window.location.href = '/success';
+          }
         }, 2000);
       } else {
         setSubmitMessage('❌ Something went wrong. Please try again.');
@@ -47,7 +57,7 @@ const Form: React.FC = () => {
       <p className="text-gray-600 text-center mb-8">
         Fill out this form and we'll have your chatbot ready in 24 hours!
       </p>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Business Name */}
         <div>
@@ -74,7 +84,7 @@ const Form: React.FC = () => {
           <input
             type="url"
             id="websiteUrl"
-            {...register('websiteUrl', { 
+            {...register('websiteUrl', {
               required: 'Website URL is required',
               pattern: {
                 value: /^https?:\/\/.+/,
@@ -97,7 +107,7 @@ const Form: React.FC = () => {
           <input
             type="email"
             id="email"
-            {...register('email', { 
+            {...register('email', {
               required: 'Email is required',
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -149,7 +159,7 @@ const Form: React.FC = () => {
         {/* FAQs */}
         <div className="space-y-4">
           <h3 className="text-lg font-medium text-gray-900">Top 3 Frequently Asked Questions</h3>
-          
+
           <div>
             <label htmlFor="faq1" className="block text-sm font-medium text-gray-700 mb-2">
               FAQ #1 *
@@ -213,7 +223,7 @@ const Form: React.FC = () => {
             />
             <input
               type="text"
-              {...register('brandColor', { 
+              {...register('brandColor', {
                 required: 'Brand color is required',
                 pattern: {
                   value: /^#[0-9A-F]{6}$/i,
@@ -253,8 +263,8 @@ const Form: React.FC = () => {
         {/* Submit Message */}
         {submitMessage && (
           <div className={`text-center p-4 rounded-lg ${
-            submitMessage.includes('Success') 
-              ? 'bg-green-100 text-green-800' 
+            submitMessage.includes('Success')
+              ? 'bg-green-100 text-green-800'
               : 'bg-red-100 text-red-800'
           }`}>
             {submitMessage}
