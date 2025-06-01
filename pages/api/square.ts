@@ -16,7 +16,7 @@ export default async function handler(
   try {
     // Get webhook secret based on environment
     const webhookSecret = process.env.SQUARE_ENVIRONMENT === 'sandbox'
-      ? process.env.SQUARE_WEBHOOK_SECRET_SANDBOX || process.env.SQUARE_WEBHOOK_SECRET
+      ? process.env.SQUARE_WEBHOOK_SECRET_SANDBOX
       : process.env.SQUARE_WEBHOOK_SECRET;
 
     // Verify Square webhook signature
@@ -53,6 +53,7 @@ export default async function handler(
     const environment = process.env.SQUARE_ENVIRONMENT || 'unknown';
     console.log('🔔 Square Webhook Received:');
     console.log('Environment:', environment.toUpperCase());
+    console.log('Webhook Secret Available:', !!webhookSecret);
     console.log('Event Type:', webhookData.type);
     console.log('Event ID:', webhookData.event_id);
     console.log('Timestamp:', new Date().toISOString());
