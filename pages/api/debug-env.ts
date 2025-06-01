@@ -22,6 +22,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   return res.status(200).json({
     success: true,
     environment: envDebug,
-    message: 'Environment variables debug info'
+    message: 'Environment variables debug info',
+    timestamp: new Date().toISOString()
   });
 }
