@@ -5,7 +5,7 @@ import Form from '@/components/Form';
 // Square checkout URLs - automatically switches based on environment
 const SQUARE_CHECKOUT_URLS = {
   production: "https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV",
-  sandbox: "https://square.link/u/SANDBOX-PLACEHOLDER" // You'll need to replace this with actual sandbox URL
+  sandbox: "https://square.link/u/duE0KIaE"
 };
 
 const getCheckoutUrl = () => {
