@@ -14,11 +14,25 @@ export default async function handler(
   }
 
   try {
-    // Verify Square webhook signature (uncomment when webhook is configured)
-    if (process.env.SQUARE_WEBHOOK_SECRET) {
+    // Get webhook secret based on environment
+    const webhookSecret = process.env.SQUARE_ENVIRONMENT === 'sandbox'
+      ? process.env.SQUARE_WEBHOOK_SECRET_SANDBOX || process.env.SQUARE_WEBHOOK_SECRET
+      : process.env.SQUARE_WEBHOOK_SECRET;
+
+    // Verify Square webhook signature
+    if (webhookSecret) {
       const signature = req.headers['x-square-signature'] as string;
       const body = JSON.stringify(req.body);
-      const isValidSignature = verifySquareSignature(signature, body, process.env.SQUARE_WEBHOOK_SECRET);
+
+      if (!signature) {
+        console.error('❌ Missing webhook signature header');
+        return res.status(401).json({
+          success: false,
+          message: 'Missing webhook signature'
+        });
+      }
+
+      const isValidSignature = verifySquareSignature(signature, body, webhookSecret);
 
       if (!isValidSignature) {
         console.error('❌ Invalid webhook signature');
@@ -27,6 +41,8 @@ export default async function handler(
           message: 'Invalid webhook signature'
         });
       }
+
+      console.log('✅ Webhook signature verified');
     } else {
       console.log('⚠️ Webhook signature verification disabled (no secret configured)');
     }
