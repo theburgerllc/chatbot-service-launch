@@ -6,10 +6,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "functions": {
-    "pages/api/submit.ts": {
-      "maxDuration": 30
-    },
-    "pages/api/square.ts": {
+    "pages/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -18,16 +15,16 @@
       "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         },
         {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "key": "X-Frame-Options",
+          "value": "DENY"
         },
         {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
         }
       ]
     }
@@ -41,5 +38,11 @@
   ],
   "env": {
     "AIRTABLE_TABLE_NAME": "Chatbot_Requests"
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/square",
+      "destination": "/api/square"
+    }
+  ]
 }
