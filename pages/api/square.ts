@@ -1,11 +1,87 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
 import { ApiResponse } from '@/types';
+
+// Helper to determine environment
+const getSquareConfig = () => {
+  const isProduction = process.env.SQUARE_ENVIRONMENT === 'production';
+
+  return {
+    webhookSecret: isProduction
+      ? process.env.SQUARE_WEBHOOK_SECRET
+      : process.env.SQUARE_WEBHOOK_SECRET_SANDBOX,
+    applicationId: isProduction
+      ? process.env.SQUARE_APPLICATION_ID
+      : process.env.SQUARE_APPLICATION_ID_SANDBOX,
+    accessToken: isProduction
+      ? process.env.SQUARE_ACCESS_TOKEN
+      : process.env.SQUARE_ACCESS_TOKEN_SANDBOX,
+    environment: process.env.SQUARE_ENVIRONMENT || 'sandbox'
+  };
+};
+
+// Square signature verification function
+function verifySquareSignature(signature: string, body: string, secret: string): boolean {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(body)
+    .digest('base64');
+
+  return signature === expectedSignature;
+}
+
+// Update payment status in database
+async function updatePaymentStatus(paymentId: string, status: string, customerEmail?: string) {
+  if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
+    try {
+      // First, find the customer record by email if provided
+      if (customerEmail) {
+        const searchResponse = await fetch(
+          `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}?filterByFormula={Email}='${customerEmail}'`,
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`
+            }
+          }
+        );
+
+        if (searchResponse.ok) {
+          const records = await searchResponse.json();
+          if (records.records && records.records.length > 0) {
+            const recordId = records.records[0].id;
+
+            // Update the record with payment status
+            await fetch(
+              `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}/${recordId}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${process.env.AIRTABLE_API_KEY}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  fields: {
+                    'Payment Status': status,
+                    'Payment ID': paymentId,
+                    'Payment Date': new Date().toISOString(),
+                    'Status': status === 'COMPLETED' ? 'Paid - Awaiting Setup' : 'Payment Failed'
+                  }
+                })
+              }
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update payment status:', error);
+    }
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
-  // Only allow POST requests for webhooks
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -14,12 +90,11 @@ export default async function handler(
   }
 
   try {
-    // Get webhook secret based on environment
-    // Temporary: Use sandbox secret if available, fallback to production
-    const webhookSecret = process.env.SQUARE_WEBHOOK_SECRET_SANDBOX || process.env.SQUARE_WEBHOOK_SECRET;
+    const config = getSquareConfig();
+    const webhookData = req.body;
 
-    // Verify Square webhook signature
-    if (webhookSecret) {
+    // Verify webhook signature
+    if (config.webhookSecret) {
       const signature = req.headers['x-square-signature'] as string;
       const body = JSON.stringify(req.body);
 
@@ -31,7 +106,7 @@ export default async function handler(
         });
       }
 
-      const isValidSignature = verifySquareSignature(signature, body, webhookSecret);
+      const isValidSignature = verifySquareSignature(signature, body, config.webhookSecret);
 
       if (!isValidSignature) {
         console.error('❌ Invalid webhook signature');
@@ -42,49 +117,67 @@ export default async function handler(
       }
 
       console.log('✅ Webhook signature verified');
-    } else {
-      console.log('⚠️ Webhook signature verification disabled (no secret configured)');
     }
 
-    const webhookData = req.body;
 
-    // Log the webhook event
-    const environment = process.env.SQUARE_ENVIRONMENT || 'unknown';
+    // Log webhook details
     console.log('🔔 Square Webhook Received:');
-    console.log('Environment:', environment.toUpperCase());
-    console.log('Webhook Secret Available:', !!webhookSecret);
+    console.log('Environment:', config.environment.toUpperCase());
     console.log('Event Type:', webhookData.type);
     console.log('Event ID:', webhookData.event_id);
-    console.log('Timestamp:', new Date().toISOString());
-    console.log('Data:', JSON.stringify(webhookData, null, 2));
 
     // Handle different webhook event types
     switch (webhookData.type) {
       case 'payment.created':
-        await handlePaymentCreated(webhookData.data);
-        break;
-
       case 'payment.updated':
-        await handlePaymentUpdated(webhookData.data);
+        const payment = webhookData.data.object.payment;
+        console.log('💰 Payment Event:', payment.id);
+        console.log('💰 Amount:', payment.amount_money);
+        console.log('💰 Status:', payment.status);
+
+        // Extract customer email from payment data if available
+        const customerEmail = payment.buyer_email_address || payment.receipt_email;
+
+        // Update payment status in database
+        await updatePaymentStatus(payment.id, payment.status, customerEmail);
+
+        // Update payment session if session ID is available
+        const sessionId = payment.reference_id || payment.note;
+        if (sessionId && payment.status === 'COMPLETED') {
+          try {
+            await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/verify-payment`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId,
+                status: 'completed',
+                paymentId: payment.id
+              })
+            });
+          } catch (error) {
+            console.error('Failed to update payment session:', error);
+          }
+        }
         break;
 
       case 'subscription.created':
-        await handleSubscriptionCreated(webhookData.data);
-        break;
-
       case 'subscription.updated':
-        await handleSubscriptionUpdated(webhookData.data);
-        break;
+        const subscription = webhookData.data.object.subscription;
+        console.log('📅 Subscription Event:', subscription.id);
+        console.log('📅 Status:', subscription.status);
 
-      case 'subscription.canceled':
-        await handleSubscriptionCanceled(webhookData.data);
+        // Handle subscription logic
+        if (subscription.status === 'ACTIVE') {
+          // Update customer status to active subscriber
+          const subscriberEmail = subscription.customer_id; // You'll need to look this up
+          await updatePaymentStatus(subscription.id, 'SUBSCRIPTION_ACTIVE', subscriberEmail);
+        }
         break;
 
       default:
         console.log(`⚠️ Unhandled webhook event type: ${webhookData.type}`);
     }
 
-    // Return success response to Square
     return res.status(200).json({
       success: true,
       message: 'Webhook processed successfully'
@@ -92,92 +185,9 @@ export default async function handler(
 
   } catch (error) {
     console.error('❌ Square webhook error:', error);
-
     return res.status(500).json({
       success: false,
       message: 'Internal server error processing webhook'
     });
   }
-}
-
-// Helper functions for handling different webhook events
-
-async function handlePaymentCreated(paymentData: any) {
-  const payment = paymentData.object.payment;
-  console.log('💰 Payment Created:', payment.id);
-  console.log('💰 Amount:', payment.amount_money);
-  console.log('💰 Status:', payment.status);
-
-  // Update Airtable record if payment is successful
-  if (payment.status === 'COMPLETED' && process.env.AIRTABLE_API_KEY) {
-    try {
-      // Find customer record by email or create new one
-      // This would require additional customer data from Square
-      console.log('📝 Updating customer status in Airtable...');
-
-      // TODO: Implement Airtable update logic
-      // - Find customer record by payment reference
-      // - Update status to "Payment Received"
-      // - Trigger chatbot creation workflow
-
-    } catch (error) {
-      console.error('❌ Failed to update Airtable:', error);
-    }
-  }
-}
-
-async function handlePaymentUpdated(paymentData: any) {
-  console.log('💰 Payment Updated:', paymentData.object.payment.id);
-
-  // TODO: Process payment update
-  // - Handle payment status changes
-  // - Update customer records
-}
-
-async function handleSubscriptionCreated(subscriptionData: any) {
-  const subscription = subscriptionData.object.subscription;
-  console.log('📅 Subscription Created:', subscription.id);
-  console.log('📅 Plan:', subscription.plan_id);
-  console.log('📅 Status:', subscription.status);
-
-  // Process new subscription
-  if (subscription.status === 'ACTIVE') {
-    console.log('🎉 New active subscription! Starting chatbot creation process...');
-
-    // TODO: Implement subscription activation logic
-    // - Update Airtable record status to "Subscription Active"
-    // - Send welcome email
-    // - Trigger chatbot creation workflow
-    // - Set up customer onboarding sequence
-  }
-}
-
-async function handleSubscriptionUpdated(subscriptionData: any) {
-  console.log('📅 Subscription Updated:', subscriptionData.object.subscription.id);
-
-  // TODO: Process subscription update
-  // - Handle plan changes
-  // - Update billing information
-  // - Modify service level
-}
-
-async function handleSubscriptionCanceled(subscriptionData: any) {
-  console.log('📅 Subscription Canceled:', subscriptionData.object.subscription.id);
-
-  // TODO: Process subscription cancellation
-  // - Deactivate customer account
-  // - Send cancellation confirmation
-  // - Schedule data retention/deletion
-  // - Update customer status
-}
-
-// Square signature verification function
-function verifySquareSignature(signature: string, body: string, secret: string): boolean {
-  const crypto = require('crypto');
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('base64');
-
-  return signature === expectedSignature;
 }

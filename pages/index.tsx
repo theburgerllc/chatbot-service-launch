@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import LeadCaptureForm from '@/components/LeadCaptureForm';
+import axios from 'axios';
 
 // Square checkout URLs - automatically switches based on environment
 const SQUARE_CHECKOUT_URLS = {
@@ -14,10 +15,37 @@ const getCheckoutUrl = () => {
 };
 
 const HomePage: React.FC = () => {
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
+
+  const handleStartSubscription = async () => {
+    setIsCreatingCheckout(true);
+
+    try {
+      // Get lead ID from session if available
+      const leadId = sessionStorage.getItem('leadId');
+
+      // Create payment session
+      const response = await axios.post('/api/verify-payment', {
+        customerId: leadId || 'direct-checkout',
+        amount: 29700 // $297.00 in cents
+      });
+
+      if (response.data.success && response.data.checkoutUrl) {
+        // Redirect to Square checkout with session ID
+        window.location.href = response.data.checkoutUrl;
+      }
+    } catch (error) {
+      console.error('Failed to create checkout session:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setIsCreatingCheckout(false);
+    }
+  };
+
   return (
     <Layout
       title="Get a 24/7 AI Assistant That Converts Visitors into Paying Clients"
-      description="Launch your AI chatbot in under 24 hours. Fully automated. No coding required. Converts leads 24/7, books appointments automatically, and captures every customer inquiry."
+      description="Launch your AI chatbot in under 24 hours. Fully automated. No coding required."
     >
       {/* Hero Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -48,16 +76,15 @@ const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* CTA Button */}
+          {/* Updated CTA Button */}
           <div className="mb-16 animate-bounce-slow">
-            <a
-              href={getCheckoutUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block btn-primary text-xl px-12 py-4"
+            <button
+              onClick={handleStartSubscription}
+              disabled={isCreatingCheckout}
+              className="inline-block btn-primary text-xl px-12 py-4 disabled:opacity-50"
             >
-              🚀 Start Your Subscription Now
-            </a>
+              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Your Subscription Now'}
+            </button>
             <p className="text-sm text-gray-500 mt-4">
               No setup fees • Cancel anytime • 30-day money-back guarantee
             </p>
@@ -244,14 +271,13 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
 
-              <a
-                href={getCheckoutUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full btn-primary text-xl py-4 inline-block"
+              <button
+                onClick={handleStartSubscription}
+                disabled={isCreatingCheckout}
+                className="w-full btn-primary text-xl py-4 disabled:opacity-50"
               >
-                🚀 Start Your Subscription Now
-              </a>
+                {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Your Subscription Now'}
+              </button>
 
               <p className="text-sm text-gray-500 mt-4">
                 Secure payment via Square • Cancel anytime • 30-day money-back guarantee

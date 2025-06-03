@@ -11,7 +11,7 @@ interface LeadFormData {
 const LeadCaptureForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  
+
   const {
     register,
     handleSubmit,
@@ -22,26 +22,30 @@ const LeadCaptureForm: React.FC = () => {
   const onSubmit = async (data: LeadFormData) => {
     setIsSubmitting(true);
     setSubmitMessage('');
-    
+
     try {
-      // For now, just save to localStorage and show success
-      // In production, you'd send this to your API
-      const leadData = {
+      // Save lead data to database via API
+      const leadResponse = await axios.post('/api/lead-capture', {
         ...data,
         timestamp: new Date().toISOString(),
         source: 'homepage_lead_capture'
-      };
-      
-      localStorage.setItem('lead_capture_data', JSON.stringify(leadData));
-      
-      setSubmitMessage('🎉 Thanks! We\'ll be in touch soon.');
-      reset();
-      
-      // Redirect to payment after a short delay
-      setTimeout(() => {
-        window.location.href = '#pricing';
-      }, 2000);
-      
+      });
+
+      if (leadResponse.data.success) {
+        // Store lead ID for later reference
+        sessionStorage.setItem('leadId', leadResponse.data.leadId);
+
+        setSubmitMessage('🎉 Thanks! We\'ll be in touch soon.');
+        reset();
+
+        // Redirect to payment after a short delay
+        setTimeout(() => {
+          window.location.href = '#pricing';
+        }, 2000);
+      } else {
+        setSubmitMessage('❌ Failed to save your information. Please try again.');
+      }
+
     } catch (error) {
       console.error('Lead capture error:', error);
       setSubmitMessage('❌ Something went wrong. Please try again.');
@@ -58,7 +62,7 @@ const LeadCaptureForm: React.FC = () => {
       <p className="text-gray-600 text-center mb-6">
         Tell us about your business and we'll show you how our AI chatbot can help!
       </p>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Name */}
         <div>
@@ -85,7 +89,7 @@ const LeadCaptureForm: React.FC = () => {
           <input
             type="email"
             id="email"
-            {...register('email', { 
+            {...register('email', {
               required: 'Email is required',
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -141,15 +145,15 @@ const LeadCaptureForm: React.FC = () => {
         {/* Submit Message */}
         {submitMessage && (
           <div className={`text-center p-3 rounded-lg text-sm ${
-            submitMessage.includes('Thanks') 
-              ? 'bg-green-100 text-green-800' 
+            submitMessage.includes('Thanks')
+              ? 'bg-green-100 text-green-800'
               : 'bg-red-100 text-red-800'
           }`}>
             {submitMessage}
           </div>
         )}
       </form>
-      
+
       <p className="text-xs text-gray-500 text-center mt-4">
         No spam, ever. We respect your privacy.
       </p>
