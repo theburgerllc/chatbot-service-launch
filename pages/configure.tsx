@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import axios from 'axios';
 import Layout from '@/components/Layout';
 import Form from '@/components/Form';
@@ -8,7 +9,12 @@ const ConfigurePage: React.FC = () => {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [customerData, setCustomerData] = useState<any>(null);
+  const [, setCustomerData] = useState<{
+    sessionId: string;
+    customerId: string;
+    amount: number;
+    status: string;
+  } | null>(null);
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -35,7 +41,9 @@ const ConfigurePage: React.FC = () => {
           }));
         }
       } catch (error) {
-        console.error('Payment verification failed:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Payment verification failed:', error);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -76,12 +84,12 @@ const ConfigurePage: React.FC = () => {
               </h1>
 
               <p className="text-xl text-gray-600 mb-8">
-                We couldn't verify your payment. Please complete your subscription to continue.
+                We couldn&apos;t verify your payment. Please complete your subscription to continue.
               </p>
 
-              <a href="/" className="btn-primary inline-block">
+              <Link href="/" className="btn-primary inline-block">
                 ← Return to Homepage
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -107,7 +115,7 @@ const ConfigurePage: React.FC = () => {
               🎉 Payment Verified Successfully!
             </h1>
             <h2 className="text-2xl font-bold text-primary-600 mb-4">
-              Now Let's Configure Your AI Chatbot
+              Now Let&apos;s Configure Your AI Chatbot
             </h2>
           </div>
 

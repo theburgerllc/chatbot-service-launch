@@ -4,6 +4,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Set security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -50,7 +55,7 @@ export default async function handler(
                 'Name': name,
                 'Email': email,
                 'Business Name': businessName,
-                'Source': source || 'homepage_lead_capture',
+                'Source': source || 'Website Form',
                 'Created': timestamp || new Date().toISOString(),
                 'Status': 'New Lead',
                 'Lead Score': 'Hot' // Since they're actively interested
@@ -63,7 +68,7 @@ export default async function handler(
           const errorText = await airtableResponse.text();
           console.error('Airtable error:', errorText);
           // Don't fail the request if Airtable fails
-        } else {
+        } else if (process.env.NODE_ENV === 'development') {
           console.log('✅ Lead saved to Airtable:', leadId);
         }
       } catch (airtableError) {
@@ -72,14 +77,16 @@ export default async function handler(
       }
     }
 
-    // Log the lead capture
-    console.log('📝 New Lead Captured:');
-    console.log('Lead ID:', leadId);
-    console.log('Name:', name);
-    console.log('Email:', email);
-    console.log('Business:', businessName);
-    console.log('Source:', source);
-    console.log('Timestamp:', timestamp || new Date().toISOString());
+    // Log the lead capture for development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📝 New Lead Captured:');
+      console.log('Lead ID:', leadId);
+      console.log('Name:', name);
+      console.log('Email:', email);
+      console.log('Business:', businessName);
+      console.log('Source:', source);
+      console.log('Timestamp:', timestamp || new Date().toISOString());
+    }
 
     return res.status(200).json({
       success: true,

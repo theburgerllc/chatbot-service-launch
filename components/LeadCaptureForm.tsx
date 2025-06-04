@@ -28,7 +28,7 @@ const LeadCaptureForm: React.FC = () => {
       const leadResponse = await axios.post('/api/lead-capture', {
         ...data,
         timestamp: new Date().toISOString(),
-        source: 'homepage_lead_capture'
+        source: 'Website Form'
       });
 
       if (leadResponse.data.success) {
@@ -60,7 +60,7 @@ const LeadCaptureForm: React.FC = () => {
         💬 Get Started Today
       </h3>
       <p className="text-gray-600 text-center mb-6">
-        Tell us about your business and we'll show you how our AI chatbot can help!
+        Tell us about your business and we&apos;ll show you how our AI chatbot can help!
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -144,11 +144,10 @@ const LeadCaptureForm: React.FC = () => {
 
         {/* Submit Message */}
         {submitMessage && (
-          <div className={`text-center p-3 rounded-lg text-sm ${
-            submitMessage.includes('Thanks')
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          }`}>
+          <div className={`text-center p-3 rounded-lg text-sm ${submitMessage.includes('Thanks')
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+            }`}>
             {submitMessage}
           </div>
         )}

@@ -17,17 +17,21 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Set security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   if (req.method === 'POST') {
     // Create payment session
     const { customerId, amount } = req.body;
-    
+
     if (!customerId || !amount) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: customerId and amount'
       });
     }
-    
+
     const sessionId = crypto.randomBytes(32).toString('hex');
     const session: PaymentSession = {
       paymentId: sessionId,
@@ -37,42 +41,42 @@ export default async function handler(
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     };
-    
+
     paymentSessions.set(sessionId, session);
-    
+
     // Get Square checkout URL based on environment
     const isProduction = process.env.SQUARE_ENVIRONMENT === 'production';
-    const checkoutUrl = isProduction 
-      ? process.env.SQUARE_CHECKOUT_URL 
-      : process.env.SQUARE_CHECKOUT_URL_SANDBOX;
-    
+    const checkoutUrl = isProduction
+      ? process.env.SQUARE_CHECKOUT_URL
+      : (process.env.SQUARE_CHECKOUT_URL_SANDBOX || "https://square.link/u/duE0KIaE");
+
     return res.status(200).json({
       success: true,
       sessionId,
       checkoutUrl: `${checkoutUrl}?session_id=${sessionId}`
     });
   }
-  
+
   if (req.method === 'GET') {
     // Verify payment session
     const { sessionId } = req.query;
-    
+
     if (!sessionId || typeof sessionId !== 'string') {
       return res.status(400).json({
         success: false,
         message: 'Invalid session ID'
       });
     }
-    
+
     const session = paymentSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
-    
+
     // Check expiration
     if (new Date(session.expiresAt) < new Date()) {
       paymentSessions.delete(sessionId);
@@ -81,7 +85,7 @@ export default async function handler(
         message: 'Session expired'
       });
     }
-    
+
     return res.status(200).json({
       success: true,
       session: {
@@ -92,41 +96,41 @@ export default async function handler(
       }
     });
   }
-  
+
   if (req.method === 'PATCH') {
     // Update payment session status (called by webhook)
     const { sessionId, status, paymentId } = req.body;
-    
+
     if (!sessionId || !status) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: sessionId and status'
       });
     }
-    
+
     const session = paymentSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({
         success: false,
         message: 'Session not found'
       });
     }
-    
+
     // Update session status
     session.status = status;
     if (paymentId) {
       session.paymentId = paymentId;
     }
-    
+
     paymentSessions.set(sessionId, session);
-    
+
     return res.status(200).json({
       success: true,
       message: 'Session updated successfully'
     });
   }
-  
+
   return res.status(405).json({
     success: false,
     message: 'Method not allowed'

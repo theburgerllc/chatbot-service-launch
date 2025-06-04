@@ -5,6 +5,11 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiResponse>
 ) {
+  // Set security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({
@@ -15,6 +20,13 @@ export default async function handler(
 
   try {
     const formData: OnboardingFormData = req.body;
+
+    // Sanitize input data
+    Object.keys(formData).forEach(key => {
+      if (typeof formData[key as keyof OnboardingFormData] === 'string') {
+        formData[key as keyof OnboardingFormData] = (formData[key as keyof OnboardingFormData] as string).trim();
+      }
+    });
 
     // Validate required fields
     const requiredFields = [
@@ -66,16 +78,18 @@ export default async function handler(
       });
     }
 
-    // Log the submission (in production, you'd save to database)
-    console.log('📝 New Chatbot Request Received:');
-    console.log('Business Name:', formData.businessName);
-    console.log('Website:', formData.websiteUrl);
-    console.log('Email:', formData.email);
-    console.log('Phone:', formData.phoneNumber);
-    console.log('Business Hours:', formData.businessHours);
-    console.log('FAQs:', [formData.faq1, formData.faq2, formData.faq3]);
-    console.log('Brand Color:', formData.brandColor);
-    console.log('Timestamp:', new Date().toISOString());
+    // Log the submission for monitoring
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📝 New Chatbot Request Received:');
+      console.log('Business Name:', formData.businessName);
+      console.log('Website:', formData.websiteUrl);
+      console.log('Email:', formData.email);
+      console.log('Phone:', formData.phoneNumber);
+      console.log('Business Hours:', formData.businessHours);
+      console.log('FAQs:', [formData.faq1, formData.faq2, formData.faq3]);
+      console.log('Brand Color:', formData.brandColor);
+      console.log('Timestamp:', new Date().toISOString());
+    }
 
     // Prepare data for external integrations
     const emailData: EmailTemplateData = {
@@ -103,59 +117,82 @@ export default async function handler(
           },
           body: JSON.stringify({
             fields: {
-              'Business Name': formData.businessName,
+              'Name': formData.businessName,
+              'Business': formData.businessName,
               'Website URL': formData.websiteUrl,
               'Email': formData.email,
-              'Phone Number': formData.phoneNumber,
+              'Phone': formData.phoneNumber,
               'Business Hours': formData.businessHours,
               'FAQ 1': formData.faq1,
               'FAQ 2': formData.faq2,
               'FAQ 3': formData.faq3,
-              'Brand Color': formData.brandColor,
-              'Status': 'New',
+              'Brand Colors': formData.brandColor,
+              'Status': 'Setup Pending',
               'Created': new Date().toISOString(),
               'Submission ID': submissionId,
               'Estimated Delivery': estimatedDelivery,
+              'Source': 'Website Form',
+              'Account Health': 'Pending Setup',
             },
           }),
         });
 
         if (!airtableResponse.ok) {
           const errorText = await airtableResponse.text();
-          console.error('❌ Airtable API Error:', errorText);
-          throw new Error(`Failed to save to Airtable: ${airtableResponse.status}`);
+          console.error('❌ Airtable API Error:', {
+            status: airtableResponse.status,
+            statusText: airtableResponse.statusText,
+            error: errorText,
+            submissionId: submissionId,
+            baseId: process.env.AIRTABLE_BASE_ID,
+            tableName: process.env.AIRTABLE_TABLE_NAME
+          });
+          // Don't throw error - log and continue to prevent form submission failure
+          console.warn('⚠️ Continuing without Airtable save due to API error');
         }
 
         const airtableData = await airtableResponse.json();
-        console.log('✅ Successfully saved to Airtable:', airtableData.id);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Successfully saved to Airtable:', {
+            recordId: airtableData.id,
+            submissionId: submissionId,
+            businessName: formData.businessName
+          });
+        }
       } catch (airtableError) {
         console.error('❌ Airtable integration error:', airtableError);
         // Don't fail the entire request if Airtable fails
         // You might want to save to a backup system or queue for retry
       }
-    } else {
+    } else if (process.env.NODE_ENV === 'development') {
       console.log('⚠️ Airtable credentials not configured, skipping integration');
     }
 
-    // TODO: Send notification email using EmailJS or similar service
-    // Example EmailJS integration (configure when ready):
-    /*
-    const emailResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        service_id: process.env.EMAILJS_SERVICE_ID,
-        template_id: process.env.EMAILJS_TEMPLATE_ID,
-        user_id: process.env.EMAILJS_USER_ID,
-        template_params: emailData,
-      }),
-    });
-    */
+    // Send notification email using EmailJS
+    if (process.env.EMAILJS_SERVICE_ID && process.env.EMAILJS_TEMPLATE_ID && process.env.EMAILJS_USER_ID) {
+      try {
+        const emailResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            service_id: process.env.EMAILJS_SERVICE_ID,
+            template_id: process.env.EMAILJS_TEMPLATE_ID,
+            user_id: process.env.EMAILJS_USER_ID,
+            template_params: emailData,
+          }),
+        });
 
-    // Simulate processing delay (remove in production)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+        if (emailResponse.ok && process.env.NODE_ENV === 'development') {
+          console.log('✅ Email notification sent successfully');
+        } else if (!emailResponse.ok) {
+          console.error('❌ Failed to send email notification');
+        }
+      } catch (emailError) {
+        console.error('❌ Email service error:', emailError);
+      }
+    }
 
     // Return success response
     return res.status(200).json({

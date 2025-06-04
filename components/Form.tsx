@@ -55,7 +55,7 @@ const Form: React.FC = () => {
         🚀 Get Your AI Chatbot
       </h2>
       <p className="text-gray-600 text-center mb-8">
-        Fill out this form and we'll have your chatbot ready in 24 hours!
+        Fill out this form and we&apos;ll have your chatbot ready in 24 hours!
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -262,11 +262,10 @@ const Form: React.FC = () => {
 
         {/* Submit Message */}
         {submitMessage && (
-          <div className={`text-center p-4 rounded-lg ${
-            submitMessage.includes('Success')
+          <div className={`text-center p-4 rounded-lg ${submitMessage.includes('Success')
               ? 'bg-green-100 text-green-800'
               : 'bg-red-100 text-red-800'
-          }`}>
+            }`}>
             {submitMessage}
           </div>
         )}
