@@ -16,6 +16,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     SQUARE_APPLICATION_ID: process.env.SQUARE_APPLICATION_ID ? 'set' : 'missing',
     SQUARE_ACCESS_TOKEN: process.env.SQUARE_ACCESS_TOKEN ? 'set' : 'missing',
     SQUARE_CHECKOUT_URL: process.env.SQUARE_CHECKOUT_URL ? 'set' : 'missing',
+    SQUARE_CHECKOUT_URL_PREMIUM: process.env.SQUARE_CHECKOUT_URL_PREMIUM ? 'set' : 'missing',
     SQUARE_CHECKOUT_URL_SANDBOX: process.env.SQUARE_CHECKOUT_URL_SANDBOX ? 'set' : 'missing',
     SQUARE_ENVIRONMENT: process.env.SQUARE_ENVIRONMENT || 'missing',
     SQUARE_API_VERSION: process.env.SQUARE_API_VERSION || 'missing',

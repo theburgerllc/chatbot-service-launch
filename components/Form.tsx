@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import axios from 'axios';
@@ -8,6 +8,7 @@ const Form: React.FC = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
 
   const {
     register,
@@ -16,12 +17,28 @@ const Form: React.FC = () => {
     reset
   } = useForm<OnboardingFormData>();
 
+  // Get selected plan from session storage on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedPlan = sessionStorage.getItem('selectedPlan') as 'basic' | 'premium';
+      if (storedPlan) {
+        setSelectedPlan(storedPlan);
+      }
+    }
+  }, []);
+
   const onSubmit = async (data: OnboardingFormData) => {
     setIsSubmitting(true);
     setSubmitMessage('');
 
     try {
-      const response = await axios.post('/api/submit', data);
+      // Include the selected subscription plan in the form data
+      const formDataWithPlan = {
+        ...data,
+        subscriptionPlan: selectedPlan
+      };
+
+      const response = await axios.post('/api/submit', formDataWithPlan);
 
       if (response.data.success) {
         setSubmitMessage('🎉 Success! We\'ll be in touch within 24 hours.');
@@ -54,9 +71,27 @@ const Form: React.FC = () => {
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         🚀 Get Your AI Chatbot
       </h2>
-      <p className="text-gray-600 text-center mb-8">
+      <p className="text-gray-600 text-center mb-4">
         Fill out this form and we&apos;ll have your chatbot ready in 24 hours!
       </p>
+
+      {/* Selected Plan Indicator */}
+      <div className={`text-center mb-8 p-4 rounded-lg ${selectedPlan === 'premium'
+          ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
+          : 'bg-gray-50 border border-gray-200'
+        }`}>
+        <p className="text-sm font-medium text-gray-700">
+          Selected Plan: <span className={`font-bold ${selectedPlan === 'premium' ? 'text-blue-600' : 'text-gray-900'
+            }`}>
+            {selectedPlan === 'premium' ? '⭐ AI Chatbot Premium ($497/month)' : '🚀 AI Chatbot Basic ($297/month)'}
+          </span>
+        </p>
+        {selectedPlan === 'premium' && (
+          <p className="text-xs text-blue-600 mt-1">
+            Includes weekly optimization, priority support, and advanced AI features
+          </p>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Business Name */}
@@ -263,8 +298,8 @@ const Form: React.FC = () => {
         {/* Submit Message */}
         {submitMessage && (
           <div className={`text-center p-4 rounded-lg ${submitMessage.includes('Success')
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
             }`}>
             {submitMessage}
           </div>

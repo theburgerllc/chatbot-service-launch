@@ -21,12 +21,16 @@ export default async function handler(
   try {
     const formData: OnboardingFormData = req.body;
 
-    // Sanitize input data
-    Object.keys(formData).forEach(key => {
-      if (typeof formData[key as keyof OnboardingFormData] === 'string') {
-        formData[key as keyof OnboardingFormData] = (formData[key as keyof OnboardingFormData] as string).trim();
-      }
-    });
+    // Sanitize input data (trim string fields)
+    if (formData.businessName) formData.businessName = formData.businessName.trim();
+    if (formData.websiteUrl) formData.websiteUrl = formData.websiteUrl.trim();
+    if (formData.email) formData.email = formData.email.trim();
+    if (formData.phoneNumber) formData.phoneNumber = formData.phoneNumber.trim();
+    if (formData.businessHours) formData.businessHours = formData.businessHours.trim();
+    if (formData.faq1) formData.faq1 = formData.faq1.trim();
+    if (formData.faq2) formData.faq2 = formData.faq2.trim();
+    if (formData.faq3) formData.faq3 = formData.faq3.trim();
+    if (formData.brandColor) formData.brandColor = formData.brandColor.trim();
 
     // Validate required fields
     const requiredFields = [
@@ -133,6 +137,7 @@ export default async function handler(
               'Estimated Delivery': estimatedDelivery,
               'Source': 'Website Form',
               'Account Health': 'Pending Setup',
+              'Subscription Plan': formData.subscriptionPlan || 'basic',
             },
           }),
         });

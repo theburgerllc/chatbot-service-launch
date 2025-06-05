@@ -1,36 +1,34 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import LeadCaptureForm from '@/components/LeadCaptureForm';
+import PricingSection from '@/components/PricingSection';
 import axios from 'axios';
 
-// Square checkout URLs - automatically switches based on environment
-const SQUARE_CHECKOUT_URLS = {
-  production: "https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV",
-  sandbox: "https://square.link/u/duE0KIaE"
-};
-
-const getCheckoutUrl = () => {
-  const isProduction = process.env.NODE_ENV === 'production' && process.env.SQUARE_ENVIRONMENT === 'production';
-  return isProduction ? SQUARE_CHECKOUT_URLS.production : SQUARE_CHECKOUT_URLS.sandbox;
-};
+// Note: Square checkout URLs are now handled dynamically in the API based on subscription plan
 
 const HomePage: React.FC = () => {
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
-  const handleStartSubscription = async () => {
+  const handleStartSubscription = async (plan: 'basic' | 'premium' = 'basic') => {
     setIsCreatingCheckout(true);
 
     try {
       // Get lead ID from session if available
       const leadId = sessionStorage.getItem('leadId');
 
+      // Determine amount based on plan
+      const amount = plan === 'premium' ? 49700 : 29700; // $497 or $297 in cents
+
       // Create payment session
       const response = await axios.post('/api/verify-payment', {
         customerId: leadId || 'direct-checkout',
-        amount: 29700 // $297.00 in cents
+        amount,
+        subscriptionPlan: plan
       });
 
       if (response.data.success && response.data.checkoutUrl) {
+        // Store selected plan in session for post-payment configuration
+        sessionStorage.setItem('selectedPlan', plan);
         // Redirect to Square checkout with session ID
         window.location.href = response.data.checkoutUrl;
       }
@@ -79,11 +77,18 @@ const HomePage: React.FC = () => {
           {/* Updated CTA Button */}
           <div className="mb-16 animate-bounce-slow">
             <button
-              onClick={handleStartSubscription}
+              onClick={() => handleStartSubscription('basic')}
               disabled={isCreatingCheckout}
-              className="inline-block btn-primary text-xl px-12 py-4 disabled:opacity-50"
+              className="inline-block btn-primary text-xl px-12 py-4 disabled:opacity-50 mr-4"
             >
-              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Your Subscription Now'}
+              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $297/month'}
+            </button>
+            <button
+              onClick={() => handleStartSubscription('premium')}
+              disabled={isCreatingCheckout}
+              className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-xl px-12 py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50"
+            >
+              {isCreatingCheckout ? 'Creating checkout...' : '⭐ Start Premium Plan - $497/month'}
             </button>
             <p className="text-sm text-gray-500 mt-4">
               No setup fees • Cancel anytime • 30-day money-back guarantee
@@ -157,64 +162,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-600">
-              One plan, everything included. No hidden fees.
-            </p>
-          </div>
-
-          <div className="max-w-lg mx-auto">
-            <div className="card text-center border-2 border-primary-500">
-              <div className="text-primary-600 font-semibold text-sm uppercase tracking-wide mb-4">
-                Most Popular
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro Plan</h3>
-              <div className="text-4xl font-bold text-gray-900 mb-4">
-                $297<span className="text-lg text-gray-600">/month</span>
-              </div>
-              <ul className="text-left space-y-3 mb-8">
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  24/7 AI chatbot
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  Unlimited conversations
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  Auto appointment booking
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  Custom branding
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  Analytics dashboard
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-3">✓</span>
-                  Email support
-                </li>
-              </ul>
-              <a
-                href={getCheckoutUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary w-full"
-              >
-                Get Started Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PricingSection onSelectPlan={handleStartSubscription} isLoading={isCreatingCheckout} />
 
       {/* Lead Capture Section */}
       <section className="py-20 bg-gray-50">
@@ -271,13 +219,22 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={handleStartSubscription}
-                disabled={isCreatingCheckout}
-                className="w-full btn-primary text-xl py-4 disabled:opacity-50"
-              >
-                {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Your Subscription Now'}
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleStartSubscription('basic')}
+                  disabled={isCreatingCheckout}
+                  className="w-full btn-primary text-xl py-4 disabled:opacity-50"
+                >
+                  {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $297/month'}
+                </button>
+                <button
+                  onClick={() => handleStartSubscription('premium')}
+                  disabled={isCreatingCheckout}
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-xl py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50"
+                >
+                  {isCreatingCheckout ? 'Creating checkout...' : '⭐ Start Premium Plan - $497/month'}
+                </button>
+              </div>
 
               <p className="text-sm text-gray-500 mt-4">
                 Secure payment via Square • Cancel anytime • 30-day money-back guarantee

@@ -9,6 +9,7 @@ export interface OnboardingFormData {
   faq2: string;
   faq3: string;
   brandColor: string;
+  subscriptionPlan?: 'basic' | 'premium';
 }
 
 // API response interface
@@ -27,4 +28,16 @@ export interface EmailTemplateData {
   businessHours: string;
   faqs: string[];
   brandColor: string;
+}
+
+// Subscription plan interface
+export interface SubscriptionPlan {
+  id: 'basic' | 'premium';
+  name: string;
+  price: number;
+  frequency: string;
+  description: string;
+  features: string[];
+  checkoutUrl: string;
+  popular?: boolean;
 }
