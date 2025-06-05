@@ -45,7 +45,7 @@ SQUARE_API_VERSION=2025-05-21
 2. **Go to**: Items & Orders → Items
 3. **Create new item**:
    - **Name**: `AI Chatbot Pro Plan (Sandbox Test)`
-   - **Price**: `$297.00`
+   - **Price**: `$497.00`
    - **Description**: `Test subscription for chatbot service`
 4. **Go to**: Online → Square Online
 5. **Create checkout link** for your test item
@@ -57,7 +57,7 @@ In `pages/index.tsx`, replace the sandbox placeholder:
 
 ```typescript
 const SQUARE_CHECKOUT_URLS = {
-  production: "https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV",
+  production: "https://square.link/u/AAt7dzT4",
   sandbox: "YOUR_SANDBOX_CHECKOUT_URL_HERE" // Replace this
 };
 ```
@@ -127,7 +127,7 @@ Environment: SANDBOX
 Event Type: payment.created
 Event ID: evt_sandbox_123456
 💰 Payment Created: pay_sandbox_789012
-💰 Amount: { amount: 29700, currency: 'USD' }
+💰 Amount: { amount: 49700, currency: 'USD' }
 💰 Status: COMPLETED
 ```
 

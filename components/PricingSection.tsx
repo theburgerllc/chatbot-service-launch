@@ -11,7 +11,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, isLoading
     {
       id: 'basic',
       name: 'AI Chatbot Basic',
-      price: 297,
+      price: 497,
       frequency: 'month',
       description: 'Perfect for small to medium businesses',
       features: [
@@ -56,7 +56,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, isLoading
             Choose Your AI Chatbot Plan
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Select the perfect plan for your business needs. Both plans include our core AI chatbot technology 
+            Select the perfect plan for your business needs. Both plans include our core AI chatbot technology
             with 24/7 customer support and lead generation capabilities.
           </p>
         </div>
@@ -65,9 +65,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, isLoading
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 ${
-                plan.popular ? 'ring-4 ring-blue-500 ring-opacity-50' : ''
-              }`}
+              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 ${plan.popular ? 'ring-4 ring-blue-500 ring-opacity-50' : ''
+                }`}
             >
               {plan.popular && (
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -109,11 +108,10 @@ const PricingSection: React.FC<PricingSectionProps> = ({ onSelectPlan, isLoading
                 <button
                   onClick={() => onSelectPlan(plan.id)}
                   disabled={isLoading}
-                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 ${
-                    plan.popular
+                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 ${plan.popular
                       ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl'
                       : 'bg-gray-900 text-white hover:bg-gray-800 shadow-lg hover:shadow-xl'
-                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:transform hover:scale-105'}`}
+                    } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:transform hover:scale-105'}`}
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center">

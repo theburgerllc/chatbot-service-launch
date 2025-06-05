@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
       const leadId = sessionStorage.getItem('leadId');
 
       // Determine amount based on plan
-      const amount = plan === 'premium' ? 49700 : 29700; // $497 or $297 in cents
+      const amount = plan === 'premium' ? 49700 : 49700; // $497 for both plans in cents
 
       // Create payment session
       const response = await axios.post('/api/verify-payment', {
@@ -81,7 +81,7 @@ const HomePage: React.FC = () => {
               disabled={isCreatingCheckout}
               className="inline-block btn-primary text-xl px-12 py-4 disabled:opacity-50 mr-4"
             >
-              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $297/month'}
+              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $497/month'}
             </button>
             <button
               onClick={() => handleStartSubscription('premium')}
@@ -201,7 +201,7 @@ const HomePage: React.FC = () => {
                 Launch Your AI Chatbot
               </h3>
               <div className="text-4xl font-bold text-gray-900 mb-6">
-                $297<span className="text-lg text-gray-600">/month</span>
+                $497<span className="text-lg text-gray-600">/month</span>
               </div>
 
               <div className="space-y-4 mb-8">
@@ -225,7 +225,7 @@ const HomePage: React.FC = () => {
                   disabled={isCreatingCheckout}
                   className="w-full btn-primary text-xl py-4 disabled:opacity-50"
                 >
-                  {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $297/month'}
+                  {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $497/month'}
                 </button>
                 <button
                   onClick={() => handleStartSubscription('premium')}

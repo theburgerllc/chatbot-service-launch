@@ -4,10 +4,10 @@
 
 **GOOD NEWS:** You already have most of the Square setup completed!
 
-- ✅ **Square Checkout Link**: `https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV`
+- ✅ **Square Checkout Link**: `https://square.link/u/AAt7dzT4`
 - ✅ **API Credentials**: Already configured in your environment
 - ✅ **Webhook Endpoint**: Built and ready at `/api/square`
-- ✅ **Pricing**: Set to $297/month
+- ✅ **Pricing**: Set to $497/month
 - ✅ **Links Updated**: Both CTA buttons now point to your Square checkout
 
 ## 🚀 Final Steps to Complete Integration
@@ -73,7 +73,7 @@ SQUARE_API_VERSION=2025-05-21
 1. **Customer visits**: https://chatbot-service-launch.vercel.app/
 2. **Customer fills**: Contact form (saves to Airtable)
 3. **Customer clicks**: "Start Your Subscription Now"
-4. **Customer pays**: $297/month via Square
+4. **Customer pays**: $497/month via Square
 5. **Square sends**: Webhook to your API
 6. **Your system**: Processes payment and updates records
 7. **You get notified**: Via Airtable and webhook logs

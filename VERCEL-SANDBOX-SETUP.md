@@ -38,7 +38,7 @@ SQUARE_API_VERSION=2025-05-21
 ### **Step 3: Create Sandbox Checkout Link**
 
 1. **Go to**: [squareup.com/dashboard](https://squareup.com/dashboard) (Sandbox mode)
-2. **Create test product**: AI Chatbot Pro Plan (Sandbox) - $297
+2. **Create test product**: AI Chatbot Pro Plan (Sandbox) - $497
 3. **Generate checkout link**
 4. **Copy the sandbox checkout URL**
 

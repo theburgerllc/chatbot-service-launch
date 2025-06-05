@@ -28,7 +28,7 @@ If you create a new checkout link, update the URL in `pages/index.tsx`:
 
 ```typescript
 const SQUARE_CHECKOUT_URLS = {
-  production: "YOUR_NEW_CHECKOUT_URL_WITH_REDIRECT",
+  production: "https://square.link/u/AAt7dzT4",
   sandbox: "YOUR_SANDBOX_CHECKOUT_URL_WITH_REDIRECT"
 };
 ```

@@ -143,7 +143,7 @@ const SuccessPage: React.FC = () => {
                 Complete Your Payment Now
               </h2>
               <p className="text-gray-600 mb-6">
-                Your chatbot configuration is saved. Complete your $297/month subscription to start the build process.
+                Your chatbot configuration is saved. Complete your $497/month subscription to start the build process.
               </p>
 
               <Link

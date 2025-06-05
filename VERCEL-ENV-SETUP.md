@@ -77,7 +77,7 @@ Environment: SANDBOX
 Event Type: payment.created
 ✅ Webhook signature verified
 💰 Payment Created: sandbox-payment-123
-💰 Amount: { amount: 29700, currency: 'USD' }
+💰 Amount: { amount: 49700, currency: 'USD' }
 💰 Status: COMPLETED
 ```
 

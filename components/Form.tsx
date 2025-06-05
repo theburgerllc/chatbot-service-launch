@@ -77,13 +77,13 @@ const Form: React.FC = () => {
 
       {/* Selected Plan Indicator */}
       <div className={`text-center mb-8 p-4 rounded-lg ${selectedPlan === 'premium'
-          ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
-          : 'bg-gray-50 border border-gray-200'
+        ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
+        : 'bg-gray-50 border border-gray-200'
         }`}>
         <p className="text-sm font-medium text-gray-700">
           Selected Plan: <span className={`font-bold ${selectedPlan === 'premium' ? 'text-blue-600' : 'text-gray-900'
             }`}>
-            {selectedPlan === 'premium' ? '⭐ AI Chatbot Premium ($497/month)' : '🚀 AI Chatbot Basic ($297/month)'}
+            {selectedPlan === 'premium' ? '⭐ AI Chatbot Premium ($497/month)' : '🚀 AI Chatbot Basic ($497/month)'}
           </span>
         </p>
         {selectedPlan === 'premium' && (

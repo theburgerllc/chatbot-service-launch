@@ -34,7 +34,7 @@ NEXTAUTH_SECRET=u0xBCTtO+OsdEnD/19+kpsOj11hqORtQljaiaUW2dT0=
 
 1. **Go to Square Dashboard**: [squareup.com/dashboard](https://squareup.com/dashboard)
 2. **Navigate to**: Online → Square Online → Checkout Links
-3. **Edit your checkout link**: `https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV`
+3. **Edit your checkout link**: `https://square.link/u/AAt7dzT4`
 4. **Set Redirect URLs**:
    - **Success URL**: `https://chatbot-service-launch.vercel.app/configure?payment_success=true`
    - **Cancel URL**: `https://chatbot-service-launch.vercel.app/?payment_cancelled=true`
@@ -95,7 +95,7 @@ Environment: PRODUCTION
 Event Type: payment.created
 ✅ Webhook signature verified
 💰 Payment Created: pay_prod_123456
-💰 Amount: { amount: 29700, currency: 'USD' }
+💰 Amount: { amount: 49700, currency: 'USD' }
 💰 Status: COMPLETED
 ```
 

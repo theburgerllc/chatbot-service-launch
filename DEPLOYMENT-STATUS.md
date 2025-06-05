@@ -21,7 +21,7 @@
 
 ### ✅ **New Customer Journey**
 1. **Homepage** → Lead capture + Payment CTA
-2. **Payment** → Square checkout ($297/month)
+2. **Payment** → Square checkout ($497/month)
 3. **Configuration** → Protected page (post-payment only)
 4. **Success** → Confirmation with next steps
 
@@ -57,7 +57,7 @@
 
 ### **1. Square Checkout Redirect** (5 minutes)
 - Go to [Square Dashboard](https://squareup.com/dashboard)
-- Edit checkout link: `https://checkout.square.site/merchant/MLPTAEBXR0WWD/checkout/GYSOBO3BXN3GTCISHBZEFIDV`
+- Edit checkout link: `https://square.link/u/AAt7dzT4`
 - Set success URL: `https://chatbot-service-launch.vercel.app/configure?payment_success=true`
 
 ### **2. Vercel Environment Variables** (5 minutes)

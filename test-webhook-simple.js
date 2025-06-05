@@ -9,7 +9,7 @@ const testWebhookData = {
       payment: {
         id: 'sandbox-payment-' + Date.now(),
         amount_money: {
-          amount: 29700, // $297.00 in cents
+          amount: 49700, // $497.00 in cents
           currency: 'USD'
         },
         status: 'COMPLETED',
@@ -30,7 +30,7 @@ async function testWebhookWithoutSignature() {
   console.log('🧪 Testing Webhook Endpoint (No Signature)...');
   console.log('📝 Test Data:', JSON.stringify(testWebhookData, null, 2));
   console.log('');
-  
+
   try {
     const response = await fetch('http://localhost:3000/api/square', {
       method: 'POST',
@@ -42,10 +42,10 @@ async function testWebhookWithoutSignature() {
     });
 
     const result = await response.json();
-    
+
     console.log('📊 Response Status:', response.status);
     console.log('📋 Response Data:', JSON.stringify(result, null, 2));
-    
+
     if (response.status === 401) {
       console.log('');
       console.log('✅ WEBHOOK SECURITY WORKING!');

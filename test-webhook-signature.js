@@ -11,7 +11,7 @@ const testWebhookData = {
       payment: {
         id: 'sandbox-payment-' + Date.now(),
         amount_money: {
-          amount: 29700, // $297.00 in cents
+          amount: 49700, // $497.00 in cents
           currency: 'USD'
         },
         status: 'COMPLETED',
@@ -37,15 +37,15 @@ function generateSquareSignature(body, secret) {
 
 async function testWebhookWithSignature() {
   console.log('🧪 Testing Webhook with Proper Square Signature...');
-  
+
   const webhookSecret = 'AyQY3lSEd--B4QuTKQmVAQ';
   const body = JSON.stringify(testWebhookData);
   const signature = generateSquareSignature(body, webhookSecret);
-  
+
   console.log('📝 Test Data:', JSON.stringify(testWebhookData, null, 2));
   console.log('🔐 Generated Signature:', signature);
   console.log('');
-  
+
   try {
     // Test local server first
     console.log('Testing local server (http://localhost:3000)...');
@@ -59,20 +59,20 @@ async function testWebhookWithSignature() {
     });
 
     const localResult = await localResponse.json();
-    
+
     console.log('📊 Local Response Status:', localResponse.status);
     console.log('📋 Local Response:', JSON.stringify(localResult, null, 2));
-    
+
     if (localResponse.ok) {
       console.log('✅ LOCAL WEBHOOK SUCCESS!');
     } else {
       console.log('❌ Local webhook failed');
     }
-    
+
     console.log('');
     console.log('-'.repeat(50));
     console.log('');
-    
+
     // Test Vercel deployment
     console.log('Testing Vercel deployment (https://chatbot-service-launch.vercel.app)...');
     const vercelResponse = await fetch('https://chatbot-service-launch.vercel.app/api/square', {
@@ -85,10 +85,10 @@ async function testWebhookWithSignature() {
     });
 
     const vercelResult = await vercelResponse.json();
-    
+
     console.log('📊 Vercel Response Status:', vercelResponse.status);
     console.log('📋 Vercel Response:', JSON.stringify(vercelResult, null, 2));
-    
+
     if (vercelResponse.ok) {
       console.log('✅ VERCEL WEBHOOK SUCCESS!');
       console.log('🎉 Your webhook is ready for Square integration!');
@@ -96,7 +96,7 @@ async function testWebhookWithSignature() {
       console.log('❌ Vercel webhook failed');
       console.log('💡 Make sure you added the environment variables to Vercel');
     }
-    
+
   } catch (error) {
     console.error('❌ Test error:', error.message);
   }
@@ -104,12 +104,12 @@ async function testWebhookWithSignature() {
 
 async function testCompleteFlow() {
   console.log('🚀 Starting Complete Webhook Test...');
-  console.log('=' .repeat(60));
-  
+  console.log('='.repeat(60));
+
   await testWebhookWithSignature();
-  
+
   console.log('');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
   console.log('🎯 Test Complete!');
   console.log('');
   console.log('📋 Next Steps:');

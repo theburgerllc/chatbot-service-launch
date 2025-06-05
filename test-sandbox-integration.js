@@ -17,7 +17,7 @@ async function testSandboxIntegration() {
   console.log('🧪 Testing SANDBOX Square Integration...');
   console.log('📝 Test Data:', JSON.stringify(testData, null, 2));
   console.log('');
-  
+
   try {
     // Test local development server
     const response = await fetch('http://localhost:3000/api/submit', {
@@ -29,10 +29,10 @@ async function testSandboxIntegration() {
     });
 
     const result = await response.json();
-    
+
     console.log('📊 Response Status:', response.status);
     console.log('📋 Response Data:', JSON.stringify(result, null, 2));
-    
+
     if (response.ok && result.success) {
       console.log('');
       console.log('✅ SANDBOX FORM SUBMISSION SUCCESS!');
@@ -64,7 +64,7 @@ async function testSandboxIntegration() {
 async function testWebhookEndpoint() {
   console.log('');
   console.log('🔗 Testing Webhook Endpoint...');
-  
+
   const testWebhookData = {
     type: 'payment.created',
     event_id: 'test-event-' + Date.now(),
@@ -73,7 +73,7 @@ async function testWebhookEndpoint() {
         payment: {
           id: 'test-payment-' + Date.now(),
           amount_money: {
-            amount: 29700, // $297.00 in cents
+            amount: 49700, // $497.00 in cents
             currency: 'USD'
           },
           status: 'COMPLETED'
@@ -92,10 +92,10 @@ async function testWebhookEndpoint() {
     });
 
     const result = await response.json();
-    
+
     console.log('📊 Webhook Response Status:', response.status);
     console.log('📋 Webhook Response:', JSON.stringify(result, null, 2));
-    
+
     if (response.ok) {
       console.log('✅ WEBHOOK ENDPOINT WORKING!');
     } else {
@@ -109,13 +109,13 @@ async function testWebhookEndpoint() {
 // Run tests
 async function runAllTests() {
   console.log('🚀 Starting Sandbox Integration Tests...');
-  console.log('=' .repeat(50));
-  
+  console.log('='.repeat(50));
+
   await testSandboxIntegration();
   await testWebhookEndpoint();
-  
+
   console.log('');
-  console.log('=' .repeat(50));
+  console.log('='.repeat(50));
   console.log('🎯 Sandbox Testing Complete!');
   console.log('');
   console.log('📋 Manual Steps Remaining:');
