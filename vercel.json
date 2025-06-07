@@ -37,5 +37,5 @@
   ],
   "env": {
     "AIRTABLE_TABLE_NAME": "Chatbot_Requests"
-  },
+  }
 }
