@@ -8,7 +8,9 @@ const Form: React.FC = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+  const [selectedPlan, setSelectedPlan] = useState<string>('standard_monthly');
+  const [selectedPlanType, setSelectedPlanType] = useState<string>('standard');
+  const [selectedSavings, setSelectedSavings] = useState<number>(0);
 
   const {
     register,
@@ -20,9 +22,20 @@ const Form: React.FC = () => {
   // Get selected plan from session storage on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedPlan = sessionStorage.getItem('selectedPlan') as 'basic' | 'premium';
+      const storedPlan = sessionStorage.getItem('selectedPlan') as string;
+      const storedPlanType = sessionStorage.getItem('planType');
+      const storedSavings = sessionStorage.getItem('savings');
+      
       if (storedPlan) {
         setSelectedPlan(storedPlan);
+      }
+      
+      // Store additional plan data for display
+      if (storedPlanType) {
+        setSelectedPlanType(storedPlanType);
+      }
+      if (storedSavings) {
+        setSelectedSavings(parseInt(storedSavings));
       }
     }
   }, []);
@@ -76,19 +89,35 @@ const Form: React.FC = () => {
       </p>
 
       {/* Selected Plan Indicator */}
-      <div className={`text-center mb-8 p-4 rounded-lg ${selectedPlan === 'premium'
-        ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
-        : 'bg-gray-50 border border-gray-200'
-        }`}>
+      <div className={`text-center mb-8 p-4 rounded-lg ${
+        selectedPlan.includes('special') || selectedPlanType === 'promotional'
+          ? 'bg-gradient-to-r from-red-50 to-pink-50 border border-red-200'
+          : selectedPlanType === 'premium'
+          ? 'bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200'
+          : 'bg-gray-50 border border-gray-200'
+      }`}>
         <p className="text-sm font-medium text-gray-700">
-          Selected Plan: <span className={`font-bold ${selectedPlan === 'premium' ? 'text-blue-600' : 'text-gray-900'
-            }`}>
-            {selectedPlan === 'premium' ? '⭐ AI Chatbot Premium ($497/month)' : '🚀 AI Chatbot Basic ($497/month)'}
+          Selected Plan: <span className={`font-bold ${
+            selectedPlan.includes('special') ? 'text-red-600' : 
+            selectedPlanType === 'premium' ? 'text-blue-600' : 'text-gray-900'
+          }`}>
+            {selectedPlan === 'premium_plan' ? '⭐ AI Chatbot Premium ($497/month)' :
+             selectedPlan === 'standard_monthly' ? '🚀 AI Chatbot Standard ($297/month)' :
+             selectedPlan === 'first_month_special' ? '💰 First Month Special ($147 first month, then $297)' :
+             selectedPlan === 'today_only_special' ? '⚡ Today Only Special ($197/month)' :
+             selectedPlan === 'premium' ? '⭐ AI Chatbot Premium ($497/month)' :
+             selectedPlan === 'basic' ? '🚀 AI Chatbot Basic ($497/month)' :
+             '🚀 AI Chatbot Standard ($297/month)'}
           </span>
         </p>
-        {selectedPlan === 'premium' && (
-          <p className="text-xs text-blue-600 mt-1">
-            Includes weekly optimization, priority support, and advanced AI features
+        {selectedSavings > 0 && (
+          <p className="text-xs text-green-600 mt-1 font-semibold">
+            💰 You&apos;re saving ${selectedSavings}/month with this plan!
+          </p>
+        )}
+        {selectedPlan.includes('special') && (
+          <p className="text-xs text-red-600 mt-1">
+            🔥 Limited time promotional pricing
           </p>
         )}
       </div>

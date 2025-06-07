@@ -7,13 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "auto-fix": "node .vscode/scripts/fix-security.js && node .vscode/scripts/complete-implementations.js && node .vscode/scripts/setup-environment.js",
-    "auto-fix:security": "node .vscode/scripts/fix-security.js",
-    "auto-fix:implementations": "node .vscode/scripts/complete-implementations.js",
-    "auto-fix:environment": "node .vscode/scripts/setup-environment.js",
     "validate": "npm run build && npm run lint",
     "deploy": "npm run validate && git add . && git commit -m '🚀 Automated deployment' && git push origin main",
-    "test:automation": "echo 'Testing automation scripts...' && npm run auto-fix:security && npm run auto-fix:implementations && npm run auto-fix:environment"
+    "campaign:enable-first-month": "echo 'Enabling first month promo...' && vercel env add NEXT_PUBLIC_ENABLE_FIRST_MONTH_PROMO true production",
+    "campaign:disable-first-month": "echo 'Disabling first month promo...' && vercel env rm NEXT_PUBLIC_ENABLE_FIRST_MONTH_PROMO production",
+    "campaign:enable-today-only": "echo 'Enabling today only promo...' && vercel env add NEXT_PUBLIC_ENABLE_TODAY_ONLY_PROMO true production",
+    "campaign:status": "echo 'Checking campaign status...' && vercel env ls",
+    "analytics:summary": "curl \"$NEXT_PUBLIC_APP_URL/api/analytics?secret=$ANALYTICS_SECRET\"",
+    "pricing:enable-new": "vercel env add NEXT_PUBLIC_ENABLE_NEW_PRICING true production && vercel --prod",
+    "pricing:disable-new": "vercel env rm NEXT_PUBLIC_ENABLE_NEW_PRICING production && vercel --prod"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +27,7 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "autoprefixer": "^10.4.21",
-    "axios": "^1.6.0",
+    "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "eslint": "^9.28.0",
     "eslint-config-next": "15.3.3",
@@ -36,6 +38,5 @@
     "react-hook-form": "^7.48.0",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
-  },
-  "devDependencies": {}
+  }
 }

@@ -110,6 +110,9 @@ export default async function handler(
     const submissionId = `CB-${Date.now()}`;
     const estimatedDelivery = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
+    // Import compatibility functions for enhanced plan tracking
+    const { getPlanPrice, getPlanType, getLegacyPlanId } = await import('../../lib/plan-compatibility');
+
     // Integrate with Airtable
     if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
       try {
@@ -121,6 +124,7 @@ export default async function handler(
           },
           body: JSON.stringify({
             fields: {
+              // KEEP all existing fields exactly as they are:
               'Name': formData.businessName,
               'Business': formData.businessName,
               'Website URL': formData.websiteUrl,
@@ -137,7 +141,16 @@ export default async function handler(
               'Estimated Delivery': estimatedDelivery,
               'Source': 'Website Form',
               'Account Health': 'Pending Setup',
-              'Subscription Plan': formData.subscriptionPlan || 'basic',
+              
+              // ADD new enhanced fields (backward compatible):
+              'Subscription Plan': formData.subscriptionPlan || 'standard_monthly',
+              'Plan Price': getPlanPrice(formData.subscriptionPlan || 'standard_monthly'),
+              'Plan Type': getPlanType(formData.subscriptionPlan || 'standard_monthly'),
+              'Legacy Plan ID': getLegacyPlanId(formData.subscriptionPlan || 'standard_monthly'),
+              'Is Promotional': (formData.subscriptionPlan || '').includes('special') ? 'Yes' : 'No',
+              'Original Price': (formData.subscriptionPlan || '').includes('special') ? 297 : null,
+              'Monthly Savings': (formData.subscriptionPlan || '').includes('first_month') ? 150 : 
+                                (formData.subscriptionPlan || '').includes('today_only') ? 100 : 0
             },
           }),
         });

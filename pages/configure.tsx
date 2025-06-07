@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import axios from 'axios';
-import Layout from '@/components/Layout';
-import Form from '@/components/Form';
+import Layout from '@/components/layout/Layout';
+import Form from '@/components/forms/Form';
 
 const ConfigurePage: React.FC = () => {
   const router = useRouter();

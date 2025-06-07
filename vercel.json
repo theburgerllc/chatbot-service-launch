@@ -38,10 +38,4 @@
   "env": {
     "AIRTABLE_TABLE_NAME": "Chatbot_Requests"
   },
-  "rewrites": [
-    {
-      "source": "/api/square",
-      "destination": "/api/square"
-    }
-  ]
 }

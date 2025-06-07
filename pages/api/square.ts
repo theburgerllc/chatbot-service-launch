@@ -31,7 +31,7 @@ function verifySquareSignature(signature: string, body: string, secret: string):
 }
 
 // Update payment status in database
-async function updatePaymentStatus(paymentId: string, status: string, customerEmail?: string) {
+async function updatePaymentStatus(paymentId: string, status: string, customerEmail?: string, sessionId?: string) {
   if (process.env.AIRTABLE_API_KEY && process.env.AIRTABLE_BASE_ID) {
     try {
       // First, find the customer record by email if provided
@@ -49,8 +49,32 @@ async function updatePaymentStatus(paymentId: string, status: string, customerEm
           const records = await searchResponse.json();
           if (records.records && records.records.length > 0) {
             const recordId = records.records[0].id;
+            const existingFields = records.records[0].fields;
 
-            // Update the record with payment status
+            // Enhanced payment status update
+            const updateFields: Record<string, string | number | null> = {
+              'Payment Status': status,
+              'Payment ID': paymentId,
+              'Payment Date': new Date().toISOString(),
+              'Status': status === 'COMPLETED' ? 'Paid - Awaiting Setup' : 'Payment Failed'
+            };
+
+            // Add session-specific data if available
+            if (sessionId) {
+              // Get session data if available (for enhanced tracking)
+              // Note: In a real implementation, you'd need access to paymentSessions here
+              // For now, we'll add placeholder logic
+              updateFields['Session ID'] = sessionId;
+            }
+
+            // Calculate actual savings if this was a promotional plan
+            const currentPlan = existingFields['Subscription Plan'] || 'standard_monthly';
+            if (currentPlan.includes('special')) {
+              const originalPrice = existingFields['Original Price'] || 297;
+              const paidPrice = existingFields['Plan Price'] || 297;
+              updateFields['Actual Savings'] = originalPrice - paidPrice;
+            }
+
             await fetch(
               `https://api.airtable.com/v0/${process.env.AIRTABLE_BASE_ID}/${process.env.AIRTABLE_TABLE_NAME}/${recordId}`,
               {
@@ -60,15 +84,12 @@ async function updatePaymentStatus(paymentId: string, status: string, customerEm
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  fields: {
-                    'Payment Status': status,
-                    'Payment ID': paymentId,
-                    'Payment Date': new Date().toISOString(),
-                    'Status': status === 'COMPLETED' ? 'Paid - Awaiting Setup' : 'Payment Failed'
-                  }
+                  fields: updateFields
                 })
               }
             );
+            
+            console.log(`✅ Payment status updated for ${customerEmail}: ${status}`);
           }
         }
       }
@@ -135,14 +156,13 @@ export default async function handler(
         console.log('💰 Amount:', payment.amount_money);
         console.log('💰 Status:', payment.status);
 
-        // Extract customer email from payment data if available
+        // Extract customer email and session ID
         const customerEmail = payment.buyer_email_address || payment.receipt_email;
+        const sessionId = payment.reference_id || payment.note || extractSessionFromUrl(payment.receipt_url);
 
-        // Update payment status in database
-        await updatePaymentStatus(payment.id, payment.status, customerEmail);
-
+        // Enhanced payment status update
+        await updatePaymentStatus(payment.id, payment.status, customerEmail, sessionId);
         // Update payment session if session ID is available
-        const sessionId = payment.reference_id || payment.note;
         if (sessionId && payment.status === 'COMPLETED') {
           try {
             await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/verify-payment`, {
@@ -154,10 +174,19 @@ export default async function handler(
                 paymentId: payment.id
               })
             });
+            
+            console.log(`✅ Session ${sessionId} marked as completed`);
           } catch (error) {
-            console.error('Failed to update payment session:', error);
+            console.error('❌ Failed to update payment session:', error);
           }
         }
+
+        // Log enhanced payment details
+        console.log('💰 Enhanced Payment Details:');
+        console.log('  - Customer Email:', customerEmail);
+        console.log('  - Session ID:', sessionId);
+        console.log('  - Amount (cents):', payment.amount_money?.amount);
+        console.log('  - Currency:', payment.amount_money?.currency);
         break;
 
       case 'subscription.created':
@@ -189,5 +218,16 @@ export default async function handler(
       success: false,
       message: 'Internal server error processing webhook'
     });
+  }
+}
+
+// ADD helper function to extract session ID from URLs:
+function extractSessionFromUrl(url?: string): string | null {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get('session_id');
+  } catch {
+    return null;
   }
 }

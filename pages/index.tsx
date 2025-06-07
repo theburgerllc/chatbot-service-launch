@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import Layout from '@/components/Layout';
-import LeadCaptureForm from '@/components/LeadCaptureForm';
-import PricingSection from '@/components/PricingSection';
+import React, { useState, useEffect } from 'react';
+import Layout from '@/components/layout/Layout';
+import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
+import PricingSection from '@/components/pricing/PricingSection';
+import { analytics } from '@/lib/analytics';
 import axios from 'axios';
 
 // Note: Square checkout URLs are now handled dynamically in the API based on subscription plan
@@ -9,27 +10,46 @@ import axios from 'axios';
 const HomePage: React.FC = () => {
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
-  const handleStartSubscription = async (plan: 'basic' | 'premium' = 'basic') => {
+  const handleStartSubscription = async (plan: string = 'standard_monthly') => {
     setIsCreatingCheckout(true);
 
     try {
-      // Get lead ID from session if available
       const leadId = sessionStorage.getItem('leadId');
 
-      // Determine amount based on plan
-      const amount = plan === 'premium' ? 49700 : 49700; // $497 for both plans in cents
+      // Use compatibility layer for pricing
+      const { getPlanPrice, getPlanType } = await import('@/lib/plan-compatibility');
+      const planPrice = getPlanPrice(plan);
+      const amount = planPrice * 100; // Convert to cents
 
-      // Create payment session
+      // Enhanced session creation with campaign tracking
+      const campaignId = new URLSearchParams(window.location.search).get('utm_campaign') || 
+                        sessionStorage.getItem('campaignId') || 
+                        null;
+
+      // Track plan selection
+      analytics.trackPlanSelected(plan, getPlanType(plan), amount, campaignId || undefined);
+
       const response = await axios.post('/api/verify-payment', {
         customerId: leadId || 'direct-checkout',
-        amount,
-        subscriptionPlan: plan
+        amount: amount,
+        subscriptionPlan: plan,
+        campaignId: campaignId
       });
 
       if (response.data.success && response.data.checkoutUrl) {
-        // Store selected plan in session for post-payment configuration
+        // Track payment initiation
+        analytics.trackPaymentStarted(plan, getPlanType(plan), amount, campaignId || undefined);
+
+        // Store enhanced session data
         sessionStorage.setItem('selectedPlan', plan);
-        // Redirect to Square checkout with session ID
+        sessionStorage.setItem('planPrice', planPrice.toString());
+        sessionStorage.setItem('planType', response.data.planType || 'standard');
+        
+        if (response.data.originalPrice) {
+          sessionStorage.setItem('originalPrice', response.data.originalPrice.toString());
+          sessionStorage.setItem('savings', (response.data.originalPrice - planPrice).toString());
+        }
+
         window.location.href = response.data.checkoutUrl;
       }
     } catch (error) {
@@ -39,6 +59,18 @@ const HomePage: React.FC = () => {
       setIsCreatingCheckout(false);
     }
   };
+
+  // Track campaign views from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const campaignId = urlParams.get('utm_campaign');
+    const planId = urlParams.get('plan') || 'standard_monthly';
+    
+    if (campaignId) {
+      sessionStorage.setItem('campaignId', campaignId);
+      analytics.trackCampaignView(campaignId, planId);
+    }
+  }, []);
 
   return (
     <Layout
@@ -77,16 +109,16 @@ const HomePage: React.FC = () => {
           {/* Updated CTA Button */}
           <div className="mb-16 animate-bounce-slow">
             <button
-              onClick={() => handleStartSubscription('basic')}
+              onClick={() => handleStartSubscription('standard_monthly')}
               disabled={isCreatingCheckout}
               className="inline-block btn-primary text-xl px-12 py-4 disabled:opacity-50 mr-4"
             >
-              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $497/month'}
+              {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Standard Plan - $297/month'}
             </button>
             <button
-              onClick={() => handleStartSubscription('premium')}
+              onClick={() => handleStartSubscription('premium_plan')}
               disabled={isCreatingCheckout}
-              className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-xl px-12 py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50"
+              className="inline-block bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold text-xl px-12 py-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 disabled:opacity-50"
             >
               {isCreatingCheckout ? 'Creating checkout...' : '⭐ Start Premium Plan - $497/month'}
             </button>
@@ -201,7 +233,7 @@ const HomePage: React.FC = () => {
                 Launch Your AI Chatbot
               </h3>
               <div className="text-4xl font-bold text-gray-900 mb-6">
-                $497<span className="text-lg text-gray-600">/month</span>
+                $297<span className="text-lg text-gray-600">/month</span>
               </div>
 
               <div className="space-y-4 mb-8">
@@ -221,16 +253,16 @@ const HomePage: React.FC = () => {
 
               <div className="space-y-3">
                 <button
-                  onClick={() => handleStartSubscription('basic')}
+                  onClick={() => handleStartSubscription('standard_monthly')}
                   disabled={isCreatingCheckout}
                   className="w-full btn-primary text-xl py-4 disabled:opacity-50"
                 >
-                  {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Basic Plan - $497/month'}
+                  {isCreatingCheckout ? 'Creating checkout...' : '🚀 Start Standard Plan - $297/month'}
                 </button>
                 <button
-                  onClick={() => handleStartSubscription('premium')}
+                  onClick={() => handleStartSubscription('premium_plan')}
                   disabled={isCreatingCheckout}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-xl py-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold text-xl py-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 disabled:opacity-50"
                 >
                   {isCreatingCheckout ? 'Creating checkout...' : '⭐ Start Premium Plan - $497/month'}
                 </button>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '@/components/Layout';
+import Layout from '@/components/layout/Layout';
 import Link from 'next/link';
 
 const SuccessPage: React.FC = () => {

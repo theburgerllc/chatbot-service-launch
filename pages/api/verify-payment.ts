@@ -1,18 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 
+declare global {
+  // eslint-disable-next-line no-var
+  var sessionCleanupInterval: NodeJS.Timeout | undefined;
+}
+
 interface PaymentSession {
   paymentId: string;
   customerId: string;
   amount: number;
-  subscriptionPlan: 'basic' | 'premium';
+  subscriptionPlan: string; // Changed from specific union to string for flexibility
   status: 'pending' | 'completed' | 'failed';
   createdAt: string;
   expiresAt: string;
+  campaignId?: string; // NEW: Track campaign attribution
+  planType?: string; // NEW: Track plan category
+  originalPrice?: number; // NEW: Track original price for promos
 }
 
-// In production, use a proper database or cache
+// In production, use a proper database or cache like Redis
+// This in-memory storage is only suitable for development/testing
 const paymentSessions = new Map<string, PaymentSession>();
+
+// Cleanup expired sessions every hour
+if (typeof global.sessionCleanupInterval === 'undefined') {
+  global.sessionCleanupInterval = setInterval(() => {
+    const now = new Date();
+    paymentSessions.forEach((session, sessionId) => {
+      if (new Date(session.expiresAt) < now) {
+        paymentSessions.delete(sessionId);
+        console.log(`Cleaned up expired session: ${sessionId}`);
+      }
+    });
+  }, 60 * 60 * 1000); // 1 hour
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,7 +46,7 @@ export default async function handler(
   res.setHeader('X-XSS-Protection', '1; mode=block');
   if (req.method === 'POST') {
     // Create payment session
-    const { customerId, amount, subscriptionPlan = 'basic' } = req.body;
+    const { customerId, amount, subscriptionPlan = 'standard_monthly', campaignId } = req.body;
 
     if (!customerId || !amount) {
       return res.status(400).json({
@@ -33,7 +55,17 @@ export default async function handler(
       });
     }
 
+    // Import the compatibility functions
+    const { getPlanPrice, getPlanType, getSquareCheckoutUrl } = await import('../../lib/plan-compatibility');
+
     const sessionId = crypto.randomBytes(32).toString('hex');
+    
+    // Enhanced session with plan validation
+    const expectedAmount = getPlanPrice(subscriptionPlan) * 100; // Convert to cents
+    if (Math.abs(amount - expectedAmount) > 100) { // Allow $1 variance for fees
+      console.warn(`Amount mismatch for plan ${subscriptionPlan}: expected ${expectedAmount}, got ${amount}`);
+    }
+
     const session: PaymentSession = {
       paymentId: sessionId,
       customerId,
@@ -41,28 +73,39 @@ export default async function handler(
       subscriptionPlan,
       status: 'pending',
       createdAt: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      campaignId: campaignId || null,
+      planType: getPlanType(subscriptionPlan),
+      originalPrice: subscriptionPlan.includes('special') ? 297 : undefined // Track original price for promos
     };
 
     paymentSessions.set(sessionId, session);
 
-    // Get Square checkout URL based on environment and subscription plan
+    // Enhanced checkout URL logic with backward compatibility
     const isProduction = process.env.SQUARE_ENVIRONMENT === 'production';
     let checkoutUrl: string;
 
     if (isProduction) {
-      checkoutUrl = subscriptionPlan === 'premium'
-        ? process.env.SQUARE_CHECKOUT_URL_PREMIUM || process.env.SQUARE_CHECKOUT_URL || ''
-        : process.env.SQUARE_CHECKOUT_URL || '';
+      checkoutUrl = getSquareCheckoutUrl(subscriptionPlan);
     } else {
       checkoutUrl = process.env.SQUARE_CHECKOUT_URL_SANDBOX || "https://square.link/u/duE0KIaE";
     }
+
+    // Add campaign tracking parameters
+    const urlParams = new URLSearchParams({
+      session_id: sessionId,
+      plan: subscriptionPlan,
+      ...(campaignId && { campaign: campaignId })
+    });
 
     return res.status(200).json({
       success: true,
       sessionId,
       subscriptionPlan,
-      checkoutUrl: `${checkoutUrl}?session_id=${sessionId}`
+      planType: session.planType,
+      checkoutUrl: `${checkoutUrl}?${urlParams.toString()}`,
+      amount: session.amount,
+      originalPrice: session.originalPrice
     });
   }
 
@@ -101,6 +144,10 @@ export default async function handler(
         status: session.status,
         customerId: session.customerId,
         amount: session.amount,
+        subscriptionPlan: session.subscriptionPlan,
+        planType: session.planType,
+        campaignId: session.campaignId,
+        originalPrice: session.originalPrice,
         createdAt: session.createdAt
       }
     });
