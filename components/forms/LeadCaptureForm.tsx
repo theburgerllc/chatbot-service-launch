@@ -1,163 +1,199 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import axios from 'axios';
 
-interface LeadFormData {
-  name: string;
-  email: string;
-  businessName: string;
+interface LeadCaptureFormProps {
+  title?: string;
+  subtitle?: string;
 }
 
-const LeadCaptureForm: React.FC = () => {
+interface LeadFormData {
+  businessName: string;
+  email: string;
+  phoneNumber: string;
+  monthlyWebsiteVisitors: string;
+  currentChallenges: string;
+  interestedTier: 'starter' | 'professional' | 'business' | 'enterprise';
+}
+
+export default function LeadCaptureForm({ 
+  title = "Get Your Enterprise AI Chatbot", 
+  subtitle = "Join 50,000+ businesses using AI to automate customer engagement" 
+}: LeadCaptureFormProps) {
+  const [formData, setFormData] = useState<LeadFormData>({
+    businessName: '',
+    email: '',
+    phoneNumber: '',
+    monthlyWebsiteVisitors: '',
+    currentChallenges: '',
+    interestedTier: 'professional'
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset
-  } = useForm<LeadFormData>();
-
-  const onSubmit = async (data: LeadFormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    setSubmitMessage('');
 
     try {
-      // Save lead data to database via API
-      const leadResponse = await axios.post('/api/lead-capture', {
-        ...data,
-        timestamp: new Date().toISOString(),
-        source: 'Website Form'
+      const response = await fetch('/api/lead-capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          source: 'Enterprise Lead Form',
+          timestamp: new Date().toISOString(),
+          pageUrl: window.location.href
+        })
       });
 
-      if (leadResponse.data.success) {
-        // Store lead ID for later reference
-        sessionStorage.setItem('leadId', leadResponse.data.leadId);
-
-        setSubmitMessage('🎉 Thanks! We\'ll be in touch soon.');
-        reset();
-
-        // Redirect to payment after a short delay
+      if (response.ok) {
+        setSubmitted(true);
+        
+        // Store lead ID for session management
+        const responseData = await response.json();
+        if (responseData.leadId) {
+          sessionStorage.setItem('leadId', responseData.leadId);
+        }
+        
+        // Redirect to appropriate checkout based on tier selection
+        const checkoutUrls: Record<string, string> = {
+          starter: process.env.NEXT_PUBLIC_CHECKOUT_URL_STARTER || '',
+          professional: process.env.NEXT_PUBLIC_CHECKOUT_URL_PROFESSIONAL || '',
+          business: process.env.NEXT_PUBLIC_CHECKOUT_URL_BUSINESS || '',
+          enterprise: process.env.NEXT_PUBLIC_CHECKOUT_URL_ENTERPRISE || ''
+        };
+        
         setTimeout(() => {
-          window.location.href = '#pricing';
+          const checkoutUrl = checkoutUrls[formData.interestedTier];
+          if (checkoutUrl) {
+            window.open(checkoutUrl, '_blank');
+          }
         }, 2000);
-      } else {
-        setSubmitMessage('❌ Failed to save your information. Please try again.');
       }
-
     } catch (error) {
       console.error('Lead capture error:', error);
-      setSubmitMessage('❌ Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (submitted) {
+    return (
+      <div className="lead-form-success">
+        <h3>Thank You for Your Interest!</h3>
+        <p>We're redirecting you to secure checkout for your selected plan.</p>
+        <div className="success-benefits">
+          <p><strong>What happens next:</strong></p>
+          <ul>
+            <li>✅ Secure payment processing</li>
+            <li>✅ Immediate access to your chatbot setup</li>
+            <li>✅ 24-hour deployment guarantee</li>
+            <li>✅ Dedicated onboarding support</li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="card max-w-lg mx-auto animate-fade-in">
-      <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-        💬 Get Started Today
-      </h3>
-      <p className="text-gray-600 text-center mb-6">
-        Tell us about your business and we&apos;ll show you how our AI chatbot can help!
-      </p>
+    <div className="lead-capture-form">
+      <div className="form-header">
+        <h2>{title}</h2>
+        <p>{subtitle}</p>
+      </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Your Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            {...register('name', { required: 'Name is required' })}
-            className="form-input"
-            placeholder="John Smith"
-          />
-          {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email Address *
-          </label>
-          <input
-            type="email"
-            id="email"
-            {...register('email', {
-              required: 'Email is required',
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: 'Please enter a valid email address'
-              }
-            })}
-            className="form-input"
-            placeholder="john@company.com"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-          )}
-        </div>
-
-        {/* Business Name */}
-        <div>
-          <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
-            Business Name *
-          </label>
+      <form onSubmit={handleSubmit} className="lead-form">
+        <div className="form-group">
+          <label htmlFor="businessName">Business Name *</label>
           <input
             type="text"
             id="businessName"
-            {...register('businessName', { required: 'Business name is required' })}
-            className="form-input"
+            value={formData.businessName}
+            onChange={(e) => setFormData({...formData, businessName: e.target.value})}
             placeholder="Your Business Name"
+            required
           />
-          {errors.businessName && (
-            <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>
-          )}
         </div>
 
-        {/* Submit Button */}
-        <div className="pt-2">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+        <div className="form-group">
+          <label htmlFor="email">Business Email *</label>
+          <input
+            type="email"
+            id="email"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            placeholder="your.email@business.com"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="phoneNumber">Phone Number *</label>
+          <input
+            type="tel"
+            id="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+            placeholder="(555) 123-4567"
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="monthlyVisitors">Monthly Website Visitors</label>
+          <select
+            id="monthlyVisitors"
+            value={formData.monthlyWebsiteVisitors}
+            onChange={(e) => setFormData({...formData, monthlyWebsiteVisitors: e.target.value})}
           >
-            {isSubmitting ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </span>
-            ) : (
-              '💬 Get My Free Quote'
-            )}
-          </button>
+            <option value="">Select Range</option>
+            <option value="under-1000">Under 1,000</option>
+            <option value="1000-5000">1,000 - 5,000</option>
+            <option value="5000-25000">5,000 - 25,000</option>
+            <option value="25000-100000">25,000 - 100,000</option>
+            <option value="over-100000">Over 100,000</option>
+          </select>
         </div>
 
-        {/* Submit Message */}
-        {submitMessage && (
-          <div className={`text-center p-3 rounded-lg text-sm ${submitMessage.includes('Thanks')
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-            }`}>
-            {submitMessage}
-          </div>
-        )}
-      </form>
+        <div className="form-group">
+          <label htmlFor="interestedTier">Which Solution Interests You? *</label>
+          <select
+            id="interestedTier"
+            value={formData.interestedTier}
+            onChange={(e) => setFormData({...formData, interestedTier: e.target.value as any})}
+            required
+          >
+            <option value="starter">AI Starter ($297/month)</option>
+            <option value="professional">Business Pro ($497/month) - Most Popular</option>
+            <option value="business">Enterprise Ready ($797/month)</option>
+            <option value="enterprise">Market Leader ($1,297/month)</option>
+          </select>
+        </div>
 
-      <p className="text-xs text-gray-500 text-center mt-4">
-        No spam, ever. We respect your privacy.
-      </p>
+        <div className="form-group">
+          <label htmlFor="currentChallenges">Current Customer Service Challenges</label>
+          <textarea
+            id="currentChallenges"
+            value={formData.currentChallenges}
+            onChange={(e) => setFormData({...formData, currentChallenges: e.target.value})}
+            placeholder="What customer service challenges are you facing? (Optional)"
+            rows={3}
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          className="submit-button"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Processing...' : 'Get Your AI Chatbot →'}
+        </button>
+
+        <div className="form-guarantee">
+          <p><strong>🔒 Secure & Risk-Free</strong></p>
+          <p>30-day money-back guarantee • No setup fees until you're satisfied</p>
+        </div>
+      </form>
     </div>
   );
-};
-
-export default LeadCaptureForm;
+}
