@@ -175,7 +175,7 @@ function calculateLeadScore(leadData: EnhancedLeadData): string {
     '25000-100000': 4,
     'over-100000': 5
   };
-  score += trafficScores[leadData.monthlyWebsiteVisitors] || 0;
+  score += trafficScores[leadData.monthlyWebsiteVisitors as keyof typeof trafficScores] || 0;
   
   // Challenges mentioned (indicates pain point)
   if (leadData.currentChallenges && leadData.currentChallenges.length > 50) {
@@ -195,7 +195,7 @@ function getTierValue(tier: string): number {
     'business': 797,
     'enterprise': 1297
   };
-  return values[tier] || 297;
+  return values[tier as keyof typeof values] || 297;
 }
 
 function getFollowUpPriority(tier: string): string {
@@ -205,7 +205,7 @@ function getFollowUpPriority(tier: string): string {
     'business': 'Urgent',
     'enterprise': 'Immediate'
   };
-  return priorities[tier] || 'Standard';
+  return priorities[tier as keyof typeof priorities] || 'Standard';
 }
 
 function getEstimatedCloseDate(): string {
@@ -221,7 +221,7 @@ function getCheckoutUrl(tier: string): string {
     'business': process.env.NEXT_PUBLIC_CHECKOUT_URL_BUSINESS,
     'enterprise': process.env.NEXT_PUBLIC_CHECKOUT_URL_ENTERPRISE
   };
-  return urls[tier] || urls['professional'] || '';
+  return urls[tier as keyof typeof urls] || urls['professional'] || '';
 }
 
 async function sendHighValueLeadNotification(leadData: EnhancedLeadData, leadId: string, leadScore: string) {
