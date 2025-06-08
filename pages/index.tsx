@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Layout from '@/components/layout/Layout';
 import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
-import PricingSection from '@/components/pricing/PricingSection';
 import { analytics } from '@/lib/analytics';
 import axios from 'axios';
 
@@ -601,10 +600,10 @@ const HomePage: React.FC = () => {
             
             <div className="faq-item">
               <div className="faq-question">
-                <h3>What happens if we're not satisfied?</h3>
+                <h3>What happens if we&apos;re not satisfied?</h3>
               </div>
               <div className="faq-answer">
-                <p>We offer a 30-day money-back guarantee. If you're not completely satisfied with your chatbot's performance, we'll provide a full refund, no questions asked.</p>
+                <p>We offer a 30-day money-back guarantee. If you&apos;re not completely satisfied with your chatbot&apos;s performance, we&apos;ll provide a full refund, no questions asked.</p>
               </div>
             </div>
           </div>

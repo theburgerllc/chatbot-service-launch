@@ -81,7 +81,7 @@ export default function LeadCaptureForm({
     return (
       <div className="lead-form-success">
         <h3>Thank You for Your Interest!</h3>
-        <p>We're redirecting you to secure checkout for your selected plan.</p>
+        <p>We&apos;re redirecting you to secure checkout for your selected plan.</p>
         <div className="success-benefits">
           <p><strong>What happens next:</strong></p>
           <ul>
@@ -160,7 +160,7 @@ export default function LeadCaptureForm({
           <select
             id="interestedTier"
             value={formData.interestedTier}
-            onChange={(e) => setFormData({...formData, interestedTier: e.target.value as any})}
+            onChange={(e) => setFormData({...formData, interestedTier: e.target.value as LeadFormData['interestedTier']})}
             required
           >
             <option value="starter">AI Starter ($297/month)</option>
@@ -191,7 +191,7 @@ export default function LeadCaptureForm({
 
         <div className="form-guarantee">
           <p><strong>🔒 Secure & Risk-Free</strong></p>
-          <p>30-day money-back guarantee • No setup fees until you're satisfied</p>
+          <p>30-day money-back guarantee • No setup fees until you&apos;re satisfied</p>
         </div>
       </form>
     </div>

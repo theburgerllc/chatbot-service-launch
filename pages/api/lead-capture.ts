@@ -168,7 +168,7 @@ function calculateLeadScore(leadData: EnhancedLeadData): string {
   score += tierScores[leadData.interestedTier];
   
   // Website traffic scoring
-  const trafficScores = {
+  const trafficScores: Record<string, number> = {
     'under-1000': 1,
     '1000-5000': 2,
     '5000-25000': 3,
@@ -189,7 +189,7 @@ function calculateLeadScore(leadData: EnhancedLeadData): string {
 }
 
 function getTierValue(tier: string): number {
-  const values = {
+  const values: Record<string, number> = {
     'starter': 297,
     'professional': 497,
     'business': 797,
@@ -199,7 +199,7 @@ function getTierValue(tier: string): number {
 }
 
 function getFollowUpPriority(tier: string): string {
-  const priorities = {
+  const priorities: Record<string, string> = {
     'starter': 'Standard',
     'professional': 'High',
     'business': 'Urgent',
@@ -215,7 +215,7 @@ function getEstimatedCloseDate(): string {
 }
 
 function getCheckoutUrl(tier: string): string {
-  const urls = {
+  const urls: Record<string, string | undefined> = {
     'starter': process.env.NEXT_PUBLIC_CHECKOUT_URL_STARTER,
     'professional': process.env.NEXT_PUBLIC_CHECKOUT_URL_PROFESSIONAL,
     'business': process.env.NEXT_PUBLIC_CHECKOUT_URL_BUSINESS,
