@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Image from 'next/image';
 import Layout from '@/components/layout/Layout';
 import LeadCaptureForm from '@/components/forms/LeadCaptureForm';
 import { analytics } from '@/lib/analytics';
@@ -617,12 +618,21 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Enhanced Footer */}
-      <footer className="enterprise-footer">
+      <footer className="enterprise-footer bg-card border-t border-border">
         <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h4>AI Chatbot Solutions</h4>
-              <p>Enterprise-grade AI automation powered by technology trusted by 50,000+ global brands.</p>
+              <div className="flex items-center space-x-3 mb-4">
+                <Image
+                  src="/ai_chatbot_solutions_logo.png"
+                  alt="AI Chatbot Solutions Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain logo-footer"
+                />
+                <h4 className="font-serif text-foreground">AI Chatbot Solutions</h4>
+              </div>
+              <p className="text-muted-foreground">Enterprise-grade AI automation powered by technology trusted by 50,000+ global brands.</p>
               <div className="footer-badges">
                 <span className="footer-badge">🔒 SOC 2 Certified</span>
                 <span className="footer-badge">🌟 99.99% Uptime</span>
@@ -631,18 +641,18 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="footer-section">
-              <h4>Solutions</h4>
-              <ul>
-                <li><a href="#pricing">AI Starter ($297/month)</a></li>
-                <li><a href="#pricing">Business Pro ($497/month)</a></li>
-                <li><a href="#pricing">Enterprise Ready ($797/month)</a></li>
-                <li><a href="#pricing">Market Leader ($1,297/month)</a></li>
+              <h4 className="font-serif text-foreground">Solutions</h4>
+              <ul className="text-muted-foreground">
+                <li><a href="#pricing" className="hover:text-primary transition-colors">AI Starter ($297/month)</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Business Pro ($497/month)</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Enterprise Ready ($797/month)</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Market Leader ($1,297/month)</a></li>
               </ul>
             </div>
-            
+
             <div className="footer-section">
-              <h4>Enterprise Features</h4>
-              <ul>
+              <h4 className="font-serif text-foreground">Enterprise Features</h4>
+              <ul className="text-muted-foreground">
                 <li>ChatGPT Integration</li>
                 <li>Multi-Channel Deployment</li>
                 <li>80+ Native Integrations</li>
@@ -651,10 +661,10 @@ const HomePage: React.FC = () => {
                 <li>Enterprise Security</li>
               </ul>
             </div>
-            
+
             <div className="footer-section">
-              <h4>Support</h4>
-              <ul>
+              <h4 className="font-serif text-foreground">Support</h4>
+              <ul className="text-muted-foreground">
                 <li>24/7 Enterprise Support</li>
                 <li>Implementation Assistance</li>
                 <li>Training & Onboarding</li>
@@ -665,16 +675,16 @@ const HomePage: React.FC = () => {
           
           <div className="footer-bottom">
             <div className="footer-legal">
-              <p>&copy; 2025 AI Chatbot Solutions. All rights reserved.</p>
+              <p className="text-muted-foreground">&copy; 2025 AI Chatbot Solutions. All rights reserved.</p>
               <div className="footer-links">
-                <a href="/privacy">Privacy Policy</a>
-                <a href="/terms">Terms of Service</a>
-                <a href="/security">Security</a>
+                <a href="/privacy" className="text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="/terms" className="text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
+                <a href="/security" className="text-muted-foreground hover:text-primary transition-colors">Security</a>
               </div>
             </div>
-            
+
             <div className="footer-powered">
-              <p>Powered by BotPenguin - Trusted by 50,000+ Global Brands</p>
+              <p className="text-muted-foreground">Powered by BotPenguin - Trusted by 50,000+ Global Brands</p>
             </div>
           </div>
         </div>
